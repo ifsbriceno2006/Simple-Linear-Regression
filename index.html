@@ -49,7 +49,7 @@ h2{font-weight:800;font-size:clamp(1.6rem,3.6vw,2.2rem)}
 h3{font-weight:600;font-size:1.25rem}
 p{margin:0 0 1em;max-width:68ch}
 a{color:var(--teal-ink)}
-code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--teal-soft);padding:.1em .4em;border-radius:6px;color:var(--teal-ink)}
+code,.mono{overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--teal-soft);padding:.1em .4em;border-radius:6px;color:var(--teal-ink)}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:6px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
@@ -59,7 +59,7 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font
 .topbar .pbar{flex:1;height:10px;background:var(--teal-soft);border-radius:99px;overflow:hidden}
 .topbar .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--mango));border-radius:99px;transition:width .5s}
 .topbar .ptxt{font-size:.9rem;color:var(--muted);white-space:nowrap}
-.menu-btn{display:none}
+.btn.menu-btn{display:none}
 
 /* shell */
 .shell{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1260px;margin:0 auto}
@@ -205,7 +205,10 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
 
 @media (max-width:920px){
   .shell{grid-template-columns:minmax(0,1fr)}
-  .menu-btn{display:inline-block}
+  .btn.menu-btn{display:inline-block}
+  .topbar{gap:10px;padding:8px 12px}
+  .topbar .brand{display:none}
+  .topbar .ptxt{font-size:.8rem}
   .side{position:fixed;left:0;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:0;width:min(86vw,320px);background:var(--surface);border-right:1px solid var(--line);z-index:40;transform:translateX(-102%);transition:transform .25s;max-height:none;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
   .side.open{transform:none;box-shadow:var(--shadow)}
   .hero{grid-template-columns:minmax(0,1fr)}
@@ -271,8 +274,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <h2>Meet the shop and its data</h2>
   <p class="lead">You are the assistant manager of a home and office supplies shop in Belize City. Each week you write down three numbers. Your manager asks one question: <b>which of these helps us predict sales better, advertising or price?</b></p>
 
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>Imagine a raspado (snow cone) stand. Every Sunday you count how many flyers you handed out and how many cones you sold. After a few weeks you wonder: <i>if I know the flyers, can I guess the cones?</i> That guessing machine is called <b>regression</b>. The thing you want to guess is <b>Y</b>. The clue you use is <b>X</b>.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Picture a raspado (snow cone) stand. Every Sunday you count the flyers you handed out and the cones you sold. After a few weeks you ask: <i>if I know the flyers, can I estimate the cones?</i> A method for building that estimate from data is called <b>regression</b>. The thing you want to guess is <b>Y</b>. The clue you use is <b>X</b>.</p></div>
 
   <div class="cards">
     <div class="card"><h4>Y: the response</h4><p>What we want to explain or predict. Here: <b>weekly sales revenue</b> in BZD. It goes on the <b>vertical</b> axis.</p></div>
@@ -307,8 +310,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <h2>The line of best fit, and the misses</h2>
   <p class="lead">Regression draws one straight line through the dots. But which line? Let’s find out by trying to beat the computer.</p>
 
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>Pretend you lay a piece of dry spaghetti across the dots. You want it as close to <i>all</i> the dots as possible. For each dot, measure the straight up-or-down gap between the dot and the spaghetti. That gap is the <b>miss</b>. Statisticians call it a <b>residual</b>.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Imagine laying a piece of dry spaghetti across the dots. You want it as close to <i>all</i> the dots as possible. For each dot, measure the straight up-or-down gap between the dot and the spaghetti. That gap is the <b>miss</b>. Statisticians call it a <b>residual</b>.</p></div>
 
   <p>The line is written <span class="eq" style="font-size:1.05rem;padding:4px 12px;margin:0">Ŷ = a + b·X</span> where Ŷ (“Y-hat”) is the <b>predicted</b> sales, <b>a</b> is the intercept (where the line starts) and <b>b</b> is the slope (how steep it is).</p>
   <p><b>Residual = actual − predicted = Y − Ŷ.</b> A positive residual means the dot is above the line (sales beat the prediction). A negative residual means the dot is below it.</p>
@@ -318,7 +321,7 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
     <h3>🎮 Try it: beat least squares</h3>
     <div class="plot" id="c2Plot"></div>
     <div class="ctl"><label for="c2Slope">Tilt (slope b)</label><input type="range" id="c2Slope" min="0" max="10" step="0.01" value="3"><output id="c2SlopeO"></output></div>
-    <div class="ctl"><label for="c2Int">Height (intercept a)</label><input type="range" id="c2Int" min="0" max="6000" step="10" value="3000"><output id="c2IntO"></output></div>
+    <div class="ctl"><label for="c2Int">Height (intercept a)</label><input type="range" id="c2Int" min="0" max="6000" step="1" value="3000"><output id="c2IntO"></output></div>
     <div class="row">
       <label class="chk"><input type="checkbox" id="c2Sticks" checked> Show the misses</label>
       <label class="chk"><input type="checkbox" id="c2Squares"> Show the squares</label>
@@ -346,7 +349,7 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">3</div>
   <h2>Slope and intercept: what the numbers mean</h2>
   <p class="lead">The line has two numbers. Each one tells a small story in BZD.</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
     <p><b>Slope</b> is “how many extra cones for each extra flyer”. Like a staircase: for every step you walk <i>across</i> (more advertising), how many steps do you go <i>up</i> (more sales)? <b>Intercept</b> is where the staircase starts: the predicted sales if you handed out zero flyers.</p></div>
   <div class="eq">Predicted sales = 2305.63 + 5.5161 × Advertising</div>
   <div class="cards">
@@ -376,7 +379,7 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">4</div>
   <h2>Correlation r: the togetherness meter</h2>
   <p class="lead">How tightly do the dots hug a straight line, and which way does it lean? One number, <b>r</b>, answers both.</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
     <p>Think of r as a <b>togetherness meter</b> from −1 to +1. At <b>+1</b> the dots march in a perfect line uphill. At <b>−1</b> they march perfectly downhill. At <b>0</b> they look like scattered rice. The <b>sign</b> tells you the direction. The <b>size</b> (ignore the sign) tells you the strength.</p></div>
 
   <div class="lab">
@@ -423,15 +426,15 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">5</div>
   <h2>R²: how much of the wiggle does the line explain?</h2>
   <p class="lead">Sales go up and down from week to week. R² tells you what share of that up-and-down the line accounts for.</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>Two kids guess weekly sales. <b>Kid A</b> always says the average. <b>Kid B</b> uses the advertising line. Add up the squared misses for each kid. If Kid B’s total is tiny compared with Kid A’s, the line is doing a lot of work. R² is the share of Kid A’s misses that Kid B <i>removes</i>.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Two forecasters estimate weekly sales. <b>Forecaster A</b> always predicts the average. <b>Forecaster B</b> uses the advertising line. Add up each forecaster’s squared misses. If B’s total is tiny compared with A’s, the line is doing a lot of work. R² is the share of A’s misses that B <i>removes</i>.</p></div>
   <div class="eq">R² = 1 − (squared misses with the line) ÷ (squared misses with the average)</div>
 
   <div class="lab">
-    <h3>🎮 Try it: Kid A vs Kid B</h3>
+    <h3>🎮 Try it: Forecaster A vs Forecaster B</h3>
     <div class="row" role="group" aria-label="Choose guesser">
-      <button class="chip" id="c5Mean" aria-pressed="true">Kid A: guess the average</button>
-      <button class="chip" id="c5Line" aria-pressed="false">Kid B: use the line</button>
+      <button class="chip" id="c5Mean" aria-pressed="true">Forecaster A: predict the average</button>
+      <button class="chip" id="c5Line" aria-pressed="false">Forecaster B: use the line</button>
     </div>
     <div class="plot" id="c5Plot"></div>
     <div class="stat-grid" id="c5Stats"></div>
@@ -452,8 +455,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
     <p>R² = 0.9671 does <b>not</b> mean predictions are 96.7% accurate, and it does not mean advertising “causes 96.7% of sales”. It means the line accounts for 96.7% of the <i>sample’s</i> up-and-down in sales around the average. The leftover share is 1 − R² = 3.3%.</p></div>
 
   <h3>Adjusted R²: the “don’t just add stuff” penalty</h3>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>Imagine a cooking contest where every extra ingredient gives you a point, even a useless one. That would be unfair. Adjusted R² takes a point <i>away</i> for each ingredient, so only ingredients that really help come out ahead.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Consider a contest where every extra ingredient earns a point, even a useless one. That would be unfair. Adjusted R² takes a point <i>away</i> for each ingredient, so only ingredients that really help come out ahead.</p></div>
   <p>Formula: <b>adjusted R² = 1 − (1 − R²)(n − 1)/(n − k − 1)</b>, where k is the number of predictors. Here n = 20 and k = 1, giving 0.9652, slightly below R². Plain R² can never go down when you add a predictor. Adjusted R² can.</p>
   <div class="lab">
     <h3>🎮 Try it: add useless predictors</h3>
@@ -474,8 +477,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">6</div>
   <h2>The typical miss, and checking the line is fair</h2>
   <p class="lead">R² says how much the line explains. Two more questions matter: <i>how big is a typical miss in BZD?</i> and <i>is a straight line even the right shape?</i></p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>If you throw darts at a target, the <b>residual standard error</b> is how far your darts typically land from the bullseye. Here the bullseye is the line, and the distance is measured in BZD of sales. It is not the biggest miss, and it is not a percentage.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Think of throwing darts at a target: the <b>residual standard error</b> is how far your darts typically land from the bullseye. Here the bullseye is the line, and the distance is measured in BZD of sales. It is not the biggest miss, and it is not a percentage.</p></div>
   <div class="eq">s = √( squared misses ÷ (n − 2) ) = BZD 237.68</div>
   <p>Why n − 2 = 18? We used the data to work out <b>two</b> numbers (a and b) before measuring the misses, which uses up two “free pieces” of information. These leftover pieces are the <b>residual degrees of freedom</b>.</p>
 
@@ -525,8 +528,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">7</div>
   <h2>The p-value: is the pattern real, or just luck?</h2>
   <p class="lead">Our slope is 5.52. Maybe advertising really matters, or maybe the dots just happened to line up. How could we tell?</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>A skeptic says: “Flyers and sales have <b>nothing to do</b> with each other. Your dots lined up by luck.” To test that, write each week’s sales on a card, <b>shuffle the cards</b>, and deal them out to the weeks at random. Now flyers and sales truly have nothing to do with each other. Draw the slope. Do it again and again. If your <i>real</i> slope is far steeper than anything shuffling can make, the skeptic is in trouble. The <b>p-value</b> is how often shuffling alone gives a slope as extreme as yours.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>A skeptic claims: “Flyers and sales have <b>nothing to do</b> with each other. Your dots lined up by luck.” To test that, write each week’s sales on a card, <b>shuffle the cards</b>, and deal them out to the weeks at random. Now flyers and sales truly have nothing to do with each other. Draw the slope. Do it again and again. If your <i>real</i> slope is far steeper than anything shuffling can make, the skeptic is in trouble. The <b>p-value</b> is how often shuffling alone gives a slope as extreme as yours.</p></div>
 
   <div class="lab">
     <h3>🎮 Try it: the shuffle test</h3>
@@ -595,8 +598,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">8</div>
   <h2>Confidence intervals and margin of error</h2>
   <p class="lead">Our slope, 5.52, came from just 20 weeks. A different 20 weeks would give a slightly different slope. How much wiggle room should we allow?</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>A weather app says “about 2 to 3 hours of rain”. Not exactly 2.4, but a best guess with room on both sides. That room is the <b>margin of error</b>. For our slope: best guess ± margin of error = <b>confidence interval</b>.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>A weather forecast says “about 2 to 3 hours of rain”. Not exactly 2.4, but a best estimate with room on both sides. That room is the <b>margin of error</b>. For our slope: best guess ± margin of error = <b>confidence interval</b>.</p></div>
   <div class="eq">CI = b ± t* × SE(b) = 5.5161 ± 2.1009 × 0.2399 = [5.012, 6.020]</div>
   <ul>
     <li><b>SE(b)</b> = how much the slope typically wobbles from sample to sample.</li>
@@ -656,8 +659,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">9</div>
   <h2>Reading the full output like a pro</h2>
   <p class="lead">Excel’s Analysis ToolPak (or your Google Sheets formulas) produces three small tables. Every number in them is something you now know.</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>It’s a report card for the line. <b>Regression Statistics</b> is the headline grades. <b>ANOVA</b> splits the wiggle into “explained” and “left over”. <b>Coefficients</b> gives the slope and intercept with their uncertainty.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Think of it as a report card for the line. <b>Regression Statistics</b> is the headline grades. <b>ANOVA</b> splits the wiggle into “explained” and “left over”. <b>Coefficients</b> gives the slope and intercept with their uncertainty.</p></div>
   <div class="lab">
     <h3>🎮 Try it: decode the table</h3>
     <div class="row" role="group" aria-label="Mode">
@@ -681,8 +684,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">10</div>
   <h2>From numbers to a manager’s decision</h2>
   <p class="lead">A good analyst doesn’t stop at “p &lt; 0.05”. The manager wants to know: <i>should we spend more?</i></p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>Back at the raspado stand: flyers and sales go together. But maybe you hand out more flyers on <b>hot, sunny Sundays</b>, and hot Sundays sell more cones anyway. The flyers and the cones are both riding on the sunshine. That’s why we say <b>“is associated with”</b>, not “causes”.</p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Back at the raspado stand: flyers and sales move together. But maybe you hand out more flyers on <b>hot, sunny Sundays</b>, and hot Sundays sell more cones anyway. The flyers and the cones are both riding on the sunshine. That’s why we say <b>“is associated with”</b>, not “causes”.</p></div>
 
   <div class="lab">
     <h3>🧮 Calculator: is the extra advertising worth it?</h3>
@@ -717,8 +720,8 @@ footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:va
   <div class="num">11</div>
   <h2>Sneak peek: multiple regression</h2>
   <p class="lead">So far one clue (X) predicted sales. But the shop recorded <i>two</i> clues. What if we use both at once? That is <b>multiple linear regression</b>, and it is the topic for next week.</p>
-  <div class="callout kid"><b>🧒 Explain it like I’m 10</b>
-    <p>Baking a cake: the taste depends on sugar <i>and</i> eggs <i>and</i> baking time. Simple regression looks at one ingredient at a time. Multiple regression looks at all of them together and asks: <b>if I change just this ingredient and keep the others the same, what happens?</b></p></div>
+  <div class="callout kid"><b>💡 The big idea, in plain words</b>
+    <p>Think of baking a cake: the result depends on sugar <i>and</i> eggs <i>and</i> baking time. Simple regression looks at one ingredient at a time. Multiple regression looks at all of them together and asks: <b>if I change just this ingredient and keep the others the same, what happens?</b></p></div>
   <div class="eq">Ŷ = b₀ + b₁·Advertising + b₂·Price</div>
   <p>Each coefficient now has a “<b>holding the others constant</b>” meaning. b₁ is the change in predicted sales for BZD 1 more advertising <i>among weeks with the same average price</i>.</p>
   <div class="callout watch"><b>⚠️ Just a preview</b>
@@ -1147,7 +1150,7 @@ const c2=reg(()=>{
 onInput('#c2Slope,#c2Int',c2);$('#c2Sticks').addEventListener('change',c2);$('#c2Squares').addEventListener('change',c2);
 $('#c2Week').addEventListener('change',e=>{c2sel=+e.target.value;c2();});
 $('#c2Best').addEventListener('click',()=>{$('#c2Slope').value=FA.b;$('#c2Int').value=FA.a;c2();});
-$('#c2Mean').addEventListener('click',()=>{$('#c2Slope').value=0;$('#c2Int').value=Math.round(FA.my/10)*10;c2();});
+$('#c2Mean').addEventListener('click',()=>{$('#c2Slope').value=0;$('#c2Int').value=Math.round(FA.my);c2();});
 $('#c2Reset').addEventListener('click',()=>{$('#c2Slope').value=3;$('#c2Int').value=3000;c2();});
 
 /* ============ CH3 ============ */
@@ -1198,7 +1201,7 @@ const c4p=reg(()=>{
   const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);let rtxt='';
   if(pts.length>=3&&new Set(xs).size>1&&new Set(ys).size>1){
     const f=fit(xs,ys);g+=lineSVG(c,0,10,f.a,f.a+f.b*10);
-    rtxt=`<b>${pts.length} dots</b> · r = <b>${f.r>=0?'+':'−'}${fN(Math.abs(f.r),3)}</b> · R² = <b>${fN(f.r2,3)}</b>`;
+    const rr=Math.abs(f.r)<0.0005?0:f.r;rtxt=`<b>${pts.length} dots</b> · r = <b>${rr>=0?'+':'−'}${fN(Math.abs(rr),3)}</b> · R² = <b>${fN(rr*rr,3)}</b>`;
     if(Math.abs(f.r)<0.2&&pts.length>=6)rtxt+='<br>r is near 0, but look at the dots: if they bend, there <i>is</i> a pattern, just not a straight one.';
     else if(pts.length>8&&f.r<0.8&&f.r>0.1)rtxt+='<br>Notice how a single far-away dot can drag r down a lot.';
   }else rtxt=`${pts.length} dot${pts.length===1?'':'s'}. Add at least 3 (not in a straight vertical or horizontal row) to see r.`;
@@ -1230,9 +1233,9 @@ const c5=reg(()=>{
   g+=dotsSVG(c,ADV,SALES,-1,5);
   el.innerHTML=c.open+g+c.mid+c.close;
   const tot=useMean?FA.sst:FA.sse;
-  $('#c5Stats').innerHTML=`<div class="stat"><span>${useMean?'Squared misses guessing the average':'Squared misses using the line'}</span><b>${f2(tot)}</b></div><div class="stat"><span>Average sales (Kid A’s guess)</span><b>BZD ${f2(FA.my)}</b></div><div class="stat"><span>Share explained (R²)</span><b>${useMean?'0%':fN(FA.r2*100,2)+'%'}</b></div>`;
+  $('#c5Stats').innerHTML=`<div class="stat"><span>${useMean?'Squared misses guessing the average':'Squared misses using the line'}</span><b>${f2(tot)}</b></div><div class="stat"><span>Average sales (Forecaster A’s guess)</span><b>BZD ${f2(FA.my)}</b></div><div class="stat"><span>Share explained (R²)</span><b>${useMean?'0%':fN(FA.r2*100,2)+'%'}</b></div>`;
   $('#c5BarA').style.width=(useMean?0:FA.r2*100)+'%';$('#c5BarB').style.width=(useMean?100:(1-FA.r2)*100)+'%';
-  $('#c5Read').innerHTML=useMean?`Kid A always guesses BZD ${f0(FA.my)}. The sticks show how far off that is each week. Total squared misses: <b>${f2(FA.sst)}</b> (this is the “total variation”).`:`Kid B’s sticks are much shorter. Total squared misses drop to <b>${f2(FA.sse)}</b>.<br><b>R² = 1 − ${f2(FA.sse)} ÷ ${f2(FA.sst)} = ${f4(FA.r2)}</b>, so the line explains ${fN(FA.r2*100,2)}% of the up-and-down. The leftover ${fN((1-FA.r2)*100,2)}% is the residual share.`;
+  $('#c5Read').innerHTML=useMean?`Forecaster A always predicts BZD ${f0(FA.my)}. The sticks show how far off that is each week. Total squared misses: <b>${f2(FA.sst)}</b> (this is the “total variation”).`:`Forecaster B’s sticks are much shorter. Total squared misses drop to <b>${f2(FA.sse)}</b>.<br><b>R² = 1 − ${f2(FA.sse)} ÷ ${f2(FA.sst)} = ${f4(FA.r2)}</b>, so the line explains ${fN(FA.r2*100,2)}% of the up-and-down. The leftover ${fN((1-FA.r2)*100,2)}% is the residual share.`;
 });
 $('#c5Mean').addEventListener('click',e=>{c5m='mean';setPressed([$('#c5Mean'),$('#c5Line')],e.currentTarget);c5();});
 $('#c5Line').addEventListener('click',e=>{c5m='line';setPressed([$('#c5Mean'),$('#c5Line')],e.currentTarget);c5();});
@@ -1316,6 +1319,7 @@ function shuffleOnce(){
 function shuffleMany(n){for(let i=0;i<n;i++)shuffleOnce();c7();}
 function shReset(){SH.slopes=[];SH.ext=0;shuffleOnce();c7();}
 const c7=reg(()=>{
+  if(!SH.slopes.length)shuffleOnce();
   const F=shF(),X=shX(),isA=SH.k==='adv';
   const el1=$('#c7ShPlot'),c=frame(el1,{x:isA?[200,1100]:[21,27],y:[3000,9000],xt:isA?[300,600,900]:[22,24,26],yt:[3000,5000,7000,9000],fx:f0,fy:f0,xl:isA?'Advertising (BZD)':'Average price (BZD)',yl:'Shuffled sales',h:Math.round(clamp(el1.clientWidth*0.75,240,330)),label:'Scatterplot with shuffled sales'});
   const xa=isA?200:21,xb=isA?1100:27,last=SH.slopes[SH.slopes.length-1],ic=mean(SH.ys)-last*F.mx;
@@ -1434,7 +1438,7 @@ const INFO={
  se:{t:'Standard Error (residual SE)',v:f2(FA.s),k:'A typical miss around the line, in BZD of sales.',f:'√(Residual SS ÷ residual df)',s:'=INDEX(LINEST(Model!B2:B21,Model!A2:A21,TRUE,TRUE),3,2)'},
  n:{t:'Observations',v:'20',k:'The number of weeks (dots).',f:'n',s:'=COUNT(Model!B2:B21)'},
  a_rdf:{t:'Regression df',v:'1',k:'One predictor, so 1.',f:'k',s:'1'},
- a_rss:{t:'Regression SS',v:f2(SSR),k:'The “explained” squared variation: how much the line removes from Kid A’s total.',f:'Total SS − Residual SS',s:'=INDEX(LINEST(…),5,1)'},
+ a_rss:{t:'Regression SS',v:f2(SSR),k:'The “explained” squared variation: how much the line removes from Forecaster A’s total.',f:'Total SS − Residual SS',s:'=INDEX(LINEST(…),5,1)'},
  a_rms:{t:'Regression MS',v:f2(MSR),k:'Average explained variation per df (SS ÷ df).',f:'Regression SS ÷ 1',s:'=C2/B2'},
  F:{t:'F',v:f2(Fv),k:'Explained variation divided by leftover variation (each per df). Big F means the line explains much more than leftover noise. In simple regression F = t².',f:'Regression MS ÷ Residual MS',s:'=D2/D3'},
  sigF:{t:'Significance F',v:sci(pF),k:'The p-value of the overall model test. With one X it matches the slope’s p-value.',f:'P(F ≥ observed | H₀)',s:'=F.DIST.RT(E2,B2,B3)'},
@@ -1442,7 +1446,7 @@ const INFO={
  a_ess:{t:'Residual SS',v:f2(FA.sse),k:'The “leftover” squared variation: the sum of squared residuals. Least squares made this as small as possible.',f:'Σ(Y − Ŷ)²',s:'=INDEX(LINEST(…),5,2)'},
  a_ems:{t:'Residual MS',v:f2(MSE),k:'Leftover variation per df. Its square root is the residual standard error (237.68).',f:'Residual SS ÷ 18',s:'=C3/B3'},
  a_tdf:{t:'Total df',v:'19',k:'n − 1.',f:'n − 1',s:'=Summary!B2-1'},
- a_tss:{t:'Total SS',v:f2(FA.sst),k:'All the up-and-down in sales around the average (Kid A’s total squared misses).',f:'Regression SS + Residual SS',s:'=C2+C3'},
+ a_tss:{t:'Total SS',v:f2(FA.sst),k:'All the up-and-down in sales around the average (Forecaster A’s total squared misses).',f:'Regression SS + Residual SS',s:'=C2+C3'},
  c_int_b:{t:'Intercept coefficient',v:f4(FA.a),k:'The line’s height at X = 0 (BZD 2,305.63). It is an extrapolation here.',f:'ȳ − b·x̄',s:'=INTERCEPT(Model!B2:B21,Model!A2:A21)'},
  c_int_se:{t:'Intercept standard error',v:f4(FA.sea),k:'How much the intercept would wobble between samples.',f:'from LINEST',s:'=INDEX(LINEST(…),2,2)'},
  c_int_t:{t:'Intercept t Stat',v:f4(FA.ta),k:'Intercept ÷ its SE.',f:'a ÷ SE(a)',s:'=B8/B11'},
@@ -1477,7 +1481,7 @@ const HUNT=[
 let c9mode='explore',hi9=0;
 function c9Show(k,cell){
   $$('#c9Xl td').forEach(x=>x.classList.remove('picked','right'));if(cell)cell.classList.add('picked');
-  const o=INFO[k];$('#c9Panel').innerHTML=`<b>${o.t} = ${o.v}</b><br>🧒 ${o.k}<br><span style="color:var(--muted)">Formula: ${o.f}<br>In your spreadsheet: </span><code>${o.s}</code>`;
+  const o=INFO[k];$('#c9Panel').innerHTML=`<b>${o.t} = ${o.v}</b><br>💡 ${o.k}<br><span style="color:var(--muted)">Formula: ${o.f}<br>In your spreadsheet: </span><code>${o.s}</code>`;
 }
 function huntPrompt(){$('#c9Panel').innerHTML=hi9<HUNT.length?`🔎 <b>Task ${hi9+1} of ${HUNT.length}:</b> ${HUNT[hi9].q}`:'🏆 <b>Treasure hunt complete!</b> You found all six numbers. Now try the learning checks below.';}
 function c9Click(cell){
