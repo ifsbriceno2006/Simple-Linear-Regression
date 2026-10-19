@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simple Linear Regression: a self-guided tour (EC 2209)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9F4F3; --surface:#FFFFFF; --surface2:#F2F9F8; --ink:#0E2A3B; --muted:#486271; --line:#C7DEDB;
+  --teal:#0B7C80; --teal-soft:#D3EDEB; --teal-ink:#06585B;
+  --mango:#B87500; --mango-soft:#FFF0C4;
+  --coral:#CF3350; --coral-soft:#FDE1E6;
+  --blue:#2D63C8; --ok:#17794A; --ok-soft:#DCF2E5;
+  --shadow:0 1px 0 rgba(14,42,59,.05),0 10px 24px -14px rgba(14,42,59,.35);
+  --font-head:'Bricolage Grotesque','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  --font-body:'Atkinson Hyperlegible','Segoe UI',system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#08181F; --surface:#10262F; --surface2:#0D202A; --ink:#E4F2F1; --muted:#9BB6C0; --line:#223F4B;
+    --teal:#3CC4C3; --teal-soft:#123F47; --teal-ink:#8FE6E4;
+    --mango:#F4BE4B; --mango-soft:#3A3012;
+    --coral:#FF7D93; --coral-soft:#471F2C;
+    --blue:#7FA8FF; --ok:#5FD39A; --ok-soft:#12372A;
+    --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 24px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08181F; --surface:#10262F; --surface2:#0D202A; --ink:#E4F2F1; --muted:#9BB6C0; --line:#223F4B;
+  --teal:#3CC4C3; --teal-soft:#123F47; --teal-ink:#8FE6E4;
+  --mango:#F4BE4B; --mango-soft:#3A3012;
+  --coral:#FF7D93; --coral-soft:#471F2C;
+  --blue:#7FA8FF; --ok:#5FD39A; --ok-soft:#12372A;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 24px -14px rgba(0,0,0,.7);
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.6;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.15;margin:0 0 .5em;letter-spacing:-.01em}
+h1{font-weight:800;font-size:clamp(2.1rem,5.6vw,3.6rem)}
+h2{font-weight:800;font-size:clamp(1.6rem,3.6vw,2.2rem)}
+h3{font-weight:600;font-size:1.25rem}
+p{margin:0 0 1em;max-width:68ch}
+a{color:var(--teal-ink)}
+code,.mono{overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--teal-soft);padding:.1em .4em;border-radius:6px;color:var(--teal-ink)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 18px}
+.topbar .brand{font-family:var(--font-head);font-weight:800;font-size:1.05rem;white-space:nowrap}
+.topbar .pbar{flex:1;height:10px;background:var(--teal-soft);border-radius:99px;overflow:hidden}
+.topbar .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--mango));border-radius:99px;transition:width .5s}
+.topbar .ptxt{font-size:.9rem;color:var(--muted);white-space:nowrap}
+.btn.menu-btn{display:none}
+
+/* shell */
+.shell{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1260px;margin:0 auto}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 56px);align-self:start;max-height:calc(100vh - 70px);overflow:auto;padding:22px 14px 22px 18px}
+.side h4{font-size:.95rem;color:var(--muted);font-weight:600;margin:0 0 10px 8px}
+.side ol{list-style:none;margin:0;padding:0}
+.side a{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--ink);padding:8px 10px;border-radius:12px;font-size:.95rem;line-height:1.25}
+.side a:hover{background:var(--teal-soft)}
+.side a.cur{background:var(--teal-soft);font-weight:700}
+.side .ck{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--muted)}
+.side a.done .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.side button.reset{margin:14px 8px 0;background:none;border:1px dashed var(--line);color:var(--muted);border-radius:10px;padding:6px 10px;font:inherit;font-size:.82rem;cursor:pointer}
+main{padding:0 22px 80px;min-width:0}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:center;padding:34px 0 10px}
+.hero .sub{font-size:1.15rem;color:var(--muted)}
+.btn{display:inline-block;background:var(--teal);color:#fff;border:0;border-radius:999px;padding:.7em 1.4em;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.alt{background:var(--surface);color:var(--teal-ink);border:2px solid var(--teal)}
+.btn.small{padding:.4em 1em;font-size:.9rem}
+.goals{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 24px;margin:26px 0 0;box-shadow:var(--shadow)}
+.goals ul{margin:.4em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+.goals li{margin-bottom:.4em;break-inside:avoid}
+
+/* chapters */
+.chapter{padding:54px 0 10px;border-top:2px dashed var(--line);margin-top:44px}
+.chapter .num{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--mango-soft);color:var(--mango);font-family:var(--font-head);font-weight:800;margin-bottom:10px}
+.lead{font-size:1.15rem;color:var(--muted)}
+.callout{border-radius:16px;padding:14px 18px;margin:18px 0;max-width:72ch}
+.callout>b:first-child{display:block;font-family:var(--font-head);margin-bottom:2px}
+.callout p:last-child{margin-bottom:0}
+.kid{background:var(--mango-soft)}
+.try{background:var(--teal-soft)}
+.watch{background:var(--coral-soft)}
+.sheet{background:var(--surface);border:1px dashed var(--teal)}
+.good{background:var(--ok-soft)}
+.eq{font-family:var(--font-head);font-size:1.25rem;background:var(--surface);border:2px solid var(--teal);border-radius:14px;padding:12px 18px;display:inline-block;margin:6px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.card h4{margin-bottom:4px;font-size:1.05rem}
+.card p{margin:0;font-size:.95rem}
+.pill{display:inline-block;border-radius:999px;padding:.1em .7em;font-size:.82rem;font-weight:700;background:var(--teal-soft);color:var(--teal-ink)}
+
+/* lab widgets */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 18px 16px;margin:22px 0;box-shadow:var(--shadow)}
+.lab>h3{display:flex;gap:8px;align-items:center;margin-bottom:.6em}
+.lab svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.plot{width:100%;min-height:200px}
+.ctl{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) 92px;gap:10px;align-items:center;margin:8px 0}
+.ctl label{font-weight:700;font-size:.95rem}
+.ctl output{font-family:var(--font-head);font-weight:600;text-align:right;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--teal);height:28px}
+input[type=number],input[type=text],textarea,select{font:inherit;background:var(--surface2);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:.35em .6em;max-width:100%}
+textarea{width:100%;min-height:84px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.chip{border:2px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:999px;padding:.3em .95em;font:inherit;font-size:.92rem;font-weight:700;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:.95rem;cursor:pointer}
+.chk input{accent-color:var(--teal);width:18px;height:18px}
+.read{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:1rem}
+.read b{font-family:var(--font-head)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.stat{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.stat span{display:block;font-size:.82rem;color:var(--muted)}
+.stat b{font-family:var(--font-head);font-size:1.25rem}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.bar{height:26px;border-radius:99px;overflow:hidden;display:flex;background:var(--line);margin:8px 0}
+.bar i{display:block;height:100%;transition:width .4s}
+.bar .a{background:var(--teal)} .bar .b{background:var(--coral)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+
+/* svg classes */
+svg .grid{stroke:var(--line);stroke-width:1}
+svg .axis{stroke:var(--muted);stroke-width:1.2}
+svg .tick{fill:var(--muted);font-size:11.5px;font-family:var(--font-body)}
+svg .alabel{fill:var(--ink);font-size:12.5px;font-weight:700;font-family:var(--font-body)}
+svg .note{fill:var(--ink);font-size:12.5px;font-family:var(--font-body)}
+svg .dot{fill:var(--teal);stroke:var(--surface);stroke-width:1.5;cursor:pointer}
+svg .dot.sel{fill:var(--coral);stroke:var(--ink)}
+svg .dot.ghost{fill:var(--muted);opacity:.55}
+svg .fit{stroke:var(--coral);stroke-width:3;fill:none;stroke-linecap:round}
+svg .meanln{stroke:var(--blue);stroke-width:2.2;stroke-dasharray:7 5;fill:none}
+svg .stick{stroke:var(--mango);stroke-width:2.2}
+svg .sq{fill:var(--mango);fill-opacity:.22;stroke:var(--mango);stroke-width:1}
+svg .zero{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:4 4}
+svg .quadbad{fill:var(--coral);fill-opacity:.1}
+svg .zone{fill:var(--teal);fill-opacity:.09}
+svg .bandA{fill:var(--teal);fill-opacity:.2}
+svg .bandB{fill:var(--mango);fill-opacity:.2}
+svg .hit{fill:var(--coral);fill-opacity:.35}
+svg .bar-h{fill:var(--teal);fill-opacity:.75;stroke:var(--surface)}
+svg .bar-h.ext{fill:var(--coral)}
+svg .ci-ok{stroke:var(--teal);stroke-width:3.5;stroke-linecap:round}
+svg .ci-miss{stroke:var(--coral);stroke-width:3.5;stroke-linecap:round}
+svg .truth{stroke:var(--ink);stroke-width:2;stroke-dasharray:5 4}
+svg .curve{stroke:var(--teal);stroke-width:3;fill:none}
+svg .tail{fill:var(--coral);fill-opacity:.45}
+svg .area{fill:var(--teal);fill-opacity:.12}
+
+/* quiz */
+.quiz{margin:26px 0}
+.quiz>h3{display:flex;gap:8px;align-items:center}
+.qcard{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:16px 18px;margin:12px 0}
+.qcard.solved{border-color:var(--ok)}
+.qcard .qh{font-size:.85rem;color:var(--muted);font-weight:700;margin-bottom:4px}
+.qcard .qq{font-weight:700;margin-bottom:10px;max-width:70ch}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:var(--surface2);color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:.55em .9em;font:inherit;cursor:pointer}
+.opt:hover:not([disabled]){border-color:var(--teal)}
+.opt.bad{border-color:var(--coral);background:var(--coral-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft);font-weight:700}
+.opt[disabled]{cursor:default}
+.fb{margin-top:10px;border-radius:12px;padding:10px 14px;display:none}
+.fb.show{display:block}
+.fb.bad{background:var(--coral-soft)} .fb.ok{background:var(--ok-soft)} .fb.info{background:var(--teal-soft)}
+.fb p{margin:0}
+.numrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.numrow input{width:150px}
+.next{display:flex;justify-content:flex-end;margin:20px 0 0}
+
+/* decoder table */
+.xl{overflow-x:auto;margin:12px 0}
+.xl table{border-collapse:collapse;min-width:100%;font-size:.95rem}
+.xl th,.xl td{border:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap}
+.xl th{background:var(--teal-soft);color:var(--teal-ink);text-align:center}
+.xl td.lab-c,.xl th.lab-c{text-align:left;font-weight:700;background:var(--surface2)}
+.xl td[data-k]{cursor:pointer}
+.xl td[data-k]:hover{background:var(--mango-soft)}
+.xl td.picked{outline:3px solid var(--coral);outline-offset:-3px;background:var(--mango-soft)}
+.xl td.right{background:var(--ok-soft);outline:3px solid var(--ok);outline-offset:-3px}
+.xl caption{caption-side:top;text-align:left;font-family:var(--font-head);font-weight:600;padding:6px 0}
+details.myth{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 16px;margin:10px 0}
+details.myth summary{cursor:pointer;font-weight:700}
+details.myth p{margin:.6em 0 0}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left}
+.tbl th{color:var(--muted);font-weight:700}
+.tbl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tbl tr.hl td{background:var(--mango-soft)}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;max-width:320px;margin:10px 0}
+.sqr{aspect-ratio:1;border-radius:4px}.sqr.ex{background:var(--teal)}.sqr.lo{background:var(--coral-soft);border:1px solid var(--coral)}
+.meter{position:relative;height:18px;border-radius:99px;background:linear-gradient(90deg,var(--teal-soft),var(--mango-soft) 45%,var(--coral));margin:12px 0 4px}
+.meter i{position:absolute;top:-5px;width:6px;height:28px;border-radius:3px;background:var(--ink);transform:translateX(-3px);transition:left .3s}
+.meter-l{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)}
+.start{background:var(--ok-soft);border-left:6px solid var(--ok)}
+.start ul{margin:.4em 0 .6em;padding-left:1.2em}
+footer{border-top:2px dashed var(--line);margin-top:50px;padding:20px 0;color:var(--muted);font-size:.9rem}
+
+@media (max-width:920px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .btn.menu-btn{display:inline-block}
+  .topbar{gap:10px;padding:8px 12px}
+  .topbar .brand{display:none}
+  .topbar .ptxt{font-size:.8rem}
+  .side{position:fixed;left:0;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:0;width:min(86vw,320px);background:var(--surface);border-right:1px solid var(--line);z-index:40;transform:translateX(-102%);transition:transform .25s;max-height:none;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+  .side.open{transform:none;box-shadow:var(--shadow)}
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .goals ul{columns:1}
+  .ctl{grid-template-columns:1fr 84px}
+  .ctl label{grid-column:1/-1}
+  .ctl input[type=range]{grid-column:1}
+  main{padding:0 14px 70px}
+}
+</style>
+</head>
+<body>
+<a class="sr" href="#main">Skip to content</a>
+<header class="topbar">
+  <button class="btn small alt menu-btn" id="menuBtn" aria-expanded="false" aria-controls="side">☰ Chapters</button>
+  <div class="brand">📈 Regression Journey</div>
+  <div class="pbar" role="progressbar" aria-label="Your progress" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0" id="pbarWrap"><i id="pbar"></i></div>
+  <div class="ptxt" id="ptxt">0 of 12 done</div>
+</header>
+
+<div class="shell">
+<nav class="side" id="side" aria-label="Chapters">
+  <h4>Your route</h4>
+  <ol id="navList"></ol>
+  <button class="reset" id="resetBtn">Reset my progress</button>
+</nav>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div>
+    <h1>Can advertising predict sales?</h1>
+    <p class="sub">A self-guided tour of simple linear regression, built on the Belize City shop data from your EC 2209 lab. Every idea is explained in plain words first, then you play with it, then you check yourself.</p>
+    <p><a class="btn" href="#ch1">Start the journey</a></p>
+  </div>
+  <div class="lab" style="margin:0">
+    <h3>🎯 Try it now: guess the sales</h3>
+    <div class="plot" id="heroPlot"></div>
+    <div class="ctl"><label for="heroX">Advertising this week</label><input type="range" id="heroX" min="300" max="1000" step="5" value="700"><output id="heroXo">BZD 700</output></div>
+    <div class="read" id="heroRead" aria-live="polite"></div>
+  </div>
+</section>
+
+<div class="goals">
+  <b style="font-family:var(--font-head)">By the end you will be able to…</b>
+  <ul>
+    <li>Say what Y and X are, and draw a scatterplot the right way round</li>
+    <li>Explain the line of best fit and what a residual is</li>
+    <li>Read the slope and intercept in BZD (and know when not to trust them)</li>
+    <li>Tell the difference between r, R² and adjusted R²</li>
+    <li>Explain what a p-value really says (and what it does not)</li>
+    <li>Build and read a confidence interval and its margin of error</li>
+    <li>Read a full Excel / Google Sheets regression output</li>
+    <li>Make a careful business recommendation, then peek at multiple regression</li>
+  </ul>
+  <p style="margin:.6em 0 0;font-size:.95rem;color:var(--muted)">Teaching data are simulated for a Belize City home and office supplies retailer. All money is in Belize dollars (BZD). “Sales” means revenue, not profit.</p>
+</div>
+
+<!-- CH1 -->
+<section class="chapter" id="ch1" data-ch="ch1" data-title="Meet the shop and its data">
+  <div class="num">1</div>
+  <h2>Meet the shop and its data</h2>
+  <p class="lead">You are the assistant manager of a home and office supplies shop in Belize City. Each week you write down three numbers. Your manager asks one question: <b>which of these helps us predict sales better, advertising or price?</b></p>
+
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Think of the till at the shop. Each week you note how much you spent on advertising and how much the till rang up. After a few weeks you ask: <i>if I know the advertising spend, can I estimate the week’s takings?</i> A method for building that estimate from the shop’s own records is called <b>regression</b>. The takings you want to estimate are <b>Y</b>. The clue you use is <b>X</b>.</p></div>
+
+  <div class="cards">
+    <div class="card"><h4>Y: the response</h4><p>What we want to explain or predict. Here: <b>weekly sales revenue</b> in BZD. It goes on the <b>vertical</b> axis.</p></div>
+    <div class="card"><h4>X: the predictor</h4><p>A clue we use to predict Y. Here we have two candidates: <b>advertising spending</b> and <b>average selling price</b>.</p></div>
+    <div class="card"><h4>One dot per week</h4><p>A scatterplot puts one dot at (X, Y) for each week. Dots drifting up ↗ mean a positive link, down ↘ a negative link, a shapeless cloud means a weak link.</p></div>
+  </div>
+  <p>Careful with the word “independent”: calling X the independent variable does <i>not</i> mean X is unrelated to sales. It only means we are using X as the clue.</p>
+
+  <div class="lab">
+    <h3>🎮 Try it: compare the two scatterplots</h3>
+    <div class="row" role="group" aria-label="Choose predictor">
+      <button class="chip" id="c1adv" aria-pressed="true">X = Advertising</button>
+      <button class="chip" id="c1price" aria-pressed="false">X = Average price</button>
+    </div>
+    <div class="plot" id="c1Plot"></div>
+    <div class="read" id="c1Read" aria-live="polite">Tap or hover a dot to see that week.</div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">📋 See all 20 weeks of data</summary><div class="tbl" id="c1Table"></div></details>
+  </div>
+
+  <div class="callout watch"><b>⚠️ Watch out</b>
+    <p>Use a <b>scatterplot with X on the horizontal axis</b>, not a line chart with Week on the bottom. We are asking “does more advertising go with more sales?”, not “what happened over time?”. Also never sort one column on its own: the three numbers in a row belong together.</p></div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p>Data sheet: A = Week, B = Advertising BZD, C = Average price BZD, D = Sales BZD (rows 2–21). On <code>Model</code>, copy advertising and sales side by side so the chart gets one clean X–Y pair.</p></div>
+
+  <div class="quiz" data-quiz="ch1"></div>
+  <div class="next"><a class="btn" href="#ch2">Next: the line of best fit →</a></div>
+</section>
+
+<!-- CH2 -->
+<section class="chapter" id="ch2" data-ch="ch2" data-title="The line of best fit">
+  <div class="num">2</div>
+  <h2>The line of best fit, and the misses</h2>
+  <p class="lead">Regression draws one straight line through the dots. But which line? Let’s find out by trying to beat the computer.</p>
+
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Imagine pinning the weekly records on the back-office wall and stretching a piece of string across the dots, so it runs as close to <i>all</i> of them as possible. For each week, measure the straight up-or-down gap between the takings the till actually showed and where the string says they should have been. That gap is the <b>miss</b>. Statisticians call it a <b>residual</b>.</p></div>
+
+  <p>The line is written <span class="eq" style="font-size:1.05rem;padding:4px 12px;margin:0">Ŷ = a + b·X</span> where Ŷ (“Y-hat”) is the <b>predicted</b> sales, <b>a</b> is the intercept (where the line starts) and <b>b</b> is the slope (how steep it is).</p>
+  <p><b>Residual = actual − predicted = Y − Ŷ.</b> A positive residual means the dot is above the line (sales beat the prediction). A negative residual means the dot is below it.</p>
+  <p>Why <i>squares</i>? Ups and downs would cancel if we just added the misses. Squaring makes every miss positive, and it makes big misses count extra. <b>Least squares</b> picks the a and b that make the <b>sum of the squared misses</b> as small as possible. That is the “best” line.</p>
+
+  <div class="lab">
+    <h3>🎮 Try it: beat least squares</h3>
+    <div class="plot" id="c2Plot"></div>
+    <div class="ctl"><label for="c2Slope">Tilt (slope b)</label><input type="range" id="c2Slope" min="0" max="10" step="0.01" value="3"><output id="c2SlopeO"></output></div>
+    <div class="ctl"><label for="c2Int">Height (intercept a)</label><input type="range" id="c2Int" min="0" max="6000" step="1" value="3000"><output id="c2IntO"></output></div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="c2Sticks" checked> Show the misses</label>
+      <label class="chk"><input type="checkbox" id="c2Squares"> Show the squares</label>
+      <button class="chip" id="c2Mean">Flat line at the average</button>
+      <button class="chip" id="c2Best">Snap to the best line</button>
+      <button class="chip" id="c2Reset">Reset</button>
+    </div>
+    <div class="stat-grid" id="c2Stats"></div>
+    <div class="bar" aria-hidden="true"><i class="a" id="c2Score" style="width:0"></i></div>
+    <div class="read" id="c2Msg" aria-live="polite"></div>
+    <h3 style="margin-top:18px">🔍 Inspect one week</h3>
+    <div class="row"><label for="c2Week">Week</label><select id="c2Week"></select><span style="color:var(--muted);font-size:.9rem">(you can also click a dot)</span></div>
+    <div class="read" id="c2WeekRead" aria-live="polite"></div>
+  </div>
+
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p>On <code>Model</code>: <code>=Summary!$B$8+Summary!$B$9*A2</code> gives each predicted value (the dollar signs lock the coefficient cells). Then <code>=B2-C2</code> gives the residual. Fill both down to row 21.</p></div>
+
+  <div class="quiz" data-quiz="ch2"></div>
+  <div class="next"><a class="btn" href="#ch3">Next: slope and intercept →</a></div>
+</section>
+
+<!-- CH3 -->
+<section class="chapter" id="ch3" data-ch="ch3" data-title="Slope and intercept">
+  <div class="num">3</div>
+  <h2>Slope and intercept: what the numbers mean</h2>
+  <p class="lead">The line has two numbers. Each one tells a small story in BZD.</p>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p><b>Slope</b> answers: “for each extra BZD 1 spent on advertising, how many extra BZD land in the till?” <b>Intercept</b> is the starting point: the takings the line predicts for a week with no advertising at all.</p></div>
+  <div class="eq">Predicted sales = 2305.63 + 5.5161 × Advertising</div>
+  <div class="cards">
+    <div class="card"><h4>Slope b = 5.5161</h4><p>BZD of sales revenue per BZD of advertising. So <b>BZD 100 more advertising goes with about BZD 551.61 more weekly sales revenue</b>. It is revenue, not profit.</p></div>
+    <div class="card"><h4>Intercept a = 2305.63</h4><p>Predicted sales when advertising is 0. But the lowest advertising we ever saw was BZD 300, so this is an <b>extrapolation</b> and not a reliable “no-ads baseline”.</p></div>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: walk along the line</h3>
+    <div class="plot" id="c3Plot"></div>
+    <div class="ctl"><label for="c3X">Advertising X</label><input type="range" id="c3X" min="0" max="1500" step="10" value="700"><output id="c3XO"></output></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="c3Tri" checked> Show the “+100 BZD” step</label></div>
+    <div class="read" id="c3Read" aria-live="polite"></div>
+  </div>
+
+  <div class="callout good"><b>✅ Interpolation vs ⚠️ extrapolation</b>
+    <p><b>Interpolation</b> means predicting inside the range of X we actually observed (BZD 300 to 1,000). That is defensible. <b>Extrapolation</b> means predicting outside it. The line keeps going on the screen, but we have no evidence the shop behaves that way at BZD 1,500. A point prediction is never a guarantee.</p></div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p><code>=SLOPE(Model!B2:B21,Model!A2:A21)</code> and <code>=INTERCEPT(Model!B2:B21,Model!A2:A21)</code>. Y comes first, X second. Use the coefficient cells for calculations, not the rounded equation on the chart.</p></div>
+
+  <div class="quiz" data-quiz="ch3"></div>
+  <div class="next"><a class="btn" href="#ch4">Next: correlation r →</a></div>
+</section>
+
+<!-- CH4 -->
+<section class="chapter" id="ch4" data-ch="ch4" data-title="Correlation r">
+  <div class="num">4</div>
+  <h2>Correlation r: the togetherness meter</h2>
+  <p class="lead">How tightly do the dots hug a straight line, and which way does it lean? One number, <b>r</b>, answers both.</p>
+  <div class="callout start"><b>🌱 Start here: the simplest version</b>
+    <p>Some things in the shop go up and down together. When it is very hot, more cold drinks sell. When it rains, fewer people walk in.</p>
+    <p><b>r is a number that tells you how much two things go up and down together.</b></p>
+    <ul><li><b>r near +1:</b> when one goes up, the other goes up too. Almost every time.</li><li><b>r near −1:</b> when one goes up, the other goes down. Almost every time.</li><li><b>r near 0:</b> no pattern. Knowing one tells you nothing about the other.</li></ul>
+    <p>In our shop, weeks with more advertising had more sales. That is why r is close to +1 (it is 0.98).</p></div>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Think of r as a <b>togetherness meter</b> from −1 to +1. At <b>+1</b> the dots march in a perfect line uphill. At <b>−1</b> they march perfectly downhill. At <b>0</b> they look like loose change spilled across the counter. The <b>sign</b> tells you the direction. The <b>size</b> (ignore the sign) tells you the strength.</p></div>
+
+  <div class="lab">
+    <h3>🎮 Try it: slide r and watch the dots</h3>
+    <div class="plot" id="c4Plot"></div>
+    <div class="ctl"><label for="c4R">Correlation r</label><input type="range" id="c4R" min="-1" max="1" step="0.01" value="0.8"><output id="c4RO"></output></div>
+    <label class="chk"><input type="checkbox" id="c4Fit" checked> Show best-fit line</label>
+    <div class="read" id="c4Read" aria-live="polite"></div>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: build your own dots</h3>
+    <p style="margin-bottom:6px">Click inside the chart to add dots and watch r change. Then try the buttons.</p>
+    <div class="row">
+      <button class="chip" id="c4pLine">Start: gentle uphill</button>
+      <button class="chip" id="c4pU">Make a U-shaped curve</button>
+      <button class="chip" id="c4pOut">Add a far-away outlier</button>
+      <button class="chip" id="c4pClear">Clear</button>
+    </div>
+    <div class="plot" id="c4pPlot"></div>
+    <div class="read" id="c4pRead" aria-live="polite"></div>
+  </div>
+
+  <h3>What r is really measuring: do the weeks “agree”?</h3>
+  <p>Every week is either <b>above</b> or <b>below</b> average for X, and above or below average for Y. r checks whether weeks usually land on the <b>same side</b> for both. Weeks that agree (both above, or both below) push r <b>up</b>. Weeks that disagree pull r <b>down</b>. Weeks very far from average count for more than weeks near it.</p>
+  <div class="lab">
+    <h3>🎮 Try it: agree or disagree?</h3>
+    <div class="row" role="group" aria-label="Choose predictor">
+      <button class="chip" id="c4qadv" aria-pressed="true">Advertising and sales</button>
+      <button class="chip" id="c4qprice" aria-pressed="false">Average price and sales</button>
+    </div>
+    <div class="plot" id="c4qPlot"></div>
+    <div class="read" id="c4qRead" aria-live="polite"></div>
+    <p style="font-size:.9rem;color:var(--muted);margin:0">Teal areas = weeks that agree. Coral areas = weeks that disagree. Tap a dot to check a week.</p>
+  </div>
+
+  <h3>Back to the shop</h3>
+  <div class="two">
+    <div><div class="plot" id="c4aPlot"></div></div>
+    <div><div class="plot" id="c4bPlot"></div></div>
+  </div>
+  <div class="cards">
+    <div class="card"><h4>Advertising: r = +0.9834</h4><p>Strong, upward. Dots hug the line.</p></div>
+    <div class="card"><h4>Average price: r = −0.2222</h4><p>Weak, downward. Dots are scattered. Compare |r| values (0.9834 vs 0.2222), <b>not raw slopes</b>, because slopes are in different units.</p></div>
+  </div>
+  <div class="callout watch"><b>⚠️ Watch out</b>
+    <p>r only measures <b>straight-line</b> togetherness. A clear curve can still give r near 0. And even r = 0.98 does <b>not</b> prove one thing causes the other. A scatterplot first, a number second.</p></div>
+  <div class="cards">
+    <div class="card"><h4>✅ What r tells you</h4><p>The <b>direction</b> (+ or −) and <b>tightness</b> of a straight-line pattern between two columns of your data.</p></div>
+    <div class="card"><h4>❌ What r does not tell you</h4><p>It is not the slope. It is not a percentage. r = 0.5 is not “half as good” as 1. And it never proves cause.</p></div>
+    <div class="card"><h4>🗣️ How to say it in a report</h4><p>“There is a <b>strong positive linear association</b> between weekly advertising and weekly sales (r = +0.98).”</p></div>
+    <div class="card"><h4>🔎 How to use it in analysis</h4><p>Look at the plot first. Then use r to rank clues: advertising (|r| = 0.98) is a far better predictor of sales than price (|r| = 0.22).</p></div>
+  </div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p><code>=CORREL(Data!D2:D21,Data!B2:B21)</code> gives signed r. Excel’s regression output shows “Multiple R”, which is always |r| and hides the sign, so keep CORREL for the direction.</p></div>
+
+  <div class="quiz" data-quiz="ch4"></div>
+  <div class="next"><a class="btn" href="#ch5">Next: R² →</a></div>
+</section>
+
+<!-- CH5 -->
+<section class="chapter" id="ch5" data-ch="ch5" data-title="R² and adjusted R²">
+  <div class="num">5</div>
+  <h2>R²: how much of the wiggle does the line explain?</h2>
+  <p class="lead">Sales go up and down from week to week. R² tells you what share of that up-and-down the line accounts for.</p>
+  <div class="callout start"><b>🌱 Start here: the simplest version</b>
+    <p>Sales go up and down from week to week. Some of that moving around happens because we spent more or less on advertising. The rest happens for other reasons: holidays, weather, luck.</p>
+    <p><b>R² is a share.</b> It tells you how much of the up-and-down comes from advertising.</p>
+    <p>R² = 0.97 means: out of every 100 bits of up-and-down, about 97 come from advertising and 3 come from other things. R² = 0.05 means advertising explains only about 5 out of 100.</p></div>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Two shop managers each estimate the weekly takings. <b>Manager A</b> always predicts the usual average week. <b>Manager B</b> uses the advertising line. Add up each manager’s squared misses over the 20 weeks. If B’s total is tiny compared with A’s, the line is doing a lot of work. R² is the share of A’s misses that B <i>removes</i>.</p></div>
+  <div class="eq">R² = 1 − (squared misses with the line) ÷ (squared misses with the average)</div>
+
+  <div class="lab">
+    <h3>🎮 Try it: Manager A vs Manager B</h3>
+    <div class="row" role="group" aria-label="Choose guesser">
+      <button class="chip" id="c5Mean" aria-pressed="true">Manager A: predict the average</button>
+      <button class="chip" id="c5Line" aria-pressed="false">Manager B: use the line</button>
+    </div>
+    <div class="plot" id="c5Plot"></div>
+    <div class="stat-grid" id="c5Stats"></div>
+    <div class="bar" aria-hidden="true"><i class="a" id="c5BarA"></i><i class="b" id="c5BarB"></i></div>
+    <div class="legend"><span style="--c:var(--teal)">Explained by the line</span><span style="--c:var(--coral)">Left over (residual)</span></div>
+    <div class="read" id="c5Read" aria-live="polite"></div>
+  </div>
+
+  <p>In <b>simple</b> regression (one X, with an intercept), <b>R² = r²</b>. So r = 0.9834 gives R² = 0.9671, and price’s r = −0.2222 gives R² = 0.0494. Squaring also removes the sign, so R² says nothing about direction.</p>
+  <div class="lab">
+    <h3>🎮 Try it: from r to R²</h3>
+    <div class="plot" id="c5rPlot"></div>
+    <div class="ctl"><label for="c5rR">Correlation r</label><input type="range" id="c5rR" min="-1" max="1" step="0.01" value="0.5"><output id="c5rRO"></output></div>
+    <div class="read" id="c5rRead" aria-live="polite"></div>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: 100 squares</h3>
+    <p style="margin-bottom:4px">Each square is 1 out of every 100 bits of up-and-down in weekly sales. Teal squares are explained by the line. Pink squares are left to other things.</p>
+    <div class="row" role="group" aria-label="Choose R squared">
+      <button class="chip" id="c5sAdv" aria-pressed="true">Advertising (R² = 0.9671)</button>
+      <button class="chip" id="c5sPrice" aria-pressed="false">Average price (R² = 0.0494)</button>
+    </div>
+    <div class="ctl"><label for="c5sR">Or make your own R²</label><input type="range" id="c5sR" min="0" max="1" step="0.01" value="0.97"><output id="c5sRO"></output></div>
+    <div class="grid100" id="c5Grid" aria-hidden="true"></div>
+    <div class="read" id="c5sRead" aria-live="polite"></div>
+  </div>
+  <div class="cards">
+    <div class="card"><h4>🗣️ How to say it in a report</h4><p>“Advertising accounts for about <b>96.7%</b> of the week-to-week variation in sales in these 20 weeks (R² = 0.9671).”</p></div>
+    <div class="card"><h4>📏 Is my R² “good”?</h4><p>It depends on the field. Predicting machine output in a lab, you might expect 0.99. For people’s buying behaviour, 0.30 can already be useful. Compare with other clues, not with a magic number.</p></div>
+    <div class="card"><h4>⚠️ A high R² can still mislead</h4><p>R² can be high while residuals show a curve, while one odd week drives everything, or while the link is not causal. Always pair R² with the plots.</p></div>
+  </div>
+  <div class="callout watch"><b>⚠️ Watch out</b>
+    <p>R² = 0.9671 does <b>not</b> mean predictions are 96.7% accurate, and it does not mean advertising “causes 96.7% of sales”. It means the line accounts for 96.7% of the <i>sample’s</i> up-and-down in sales around the average. The leftover share is 1 − R² = 3.3%.</p></div>
+
+  <h3>Adjusted R²: the “don’t just add stuff” penalty</h3>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Imagine scoring a shop’s product range so that every extra product line earns a point, even one that never sells. That would be unfair. Adjusted R² takes a point <i>away</i> for each extra line, so only the lines that earn their shelf space come out ahead.</p></div>
+  <p>Formula: <b>adjusted R² = 1 − (1 − R²)(n − 1)/(n − k − 1)</b>, where k is the number of predictors. Here n = 20 and k = 1, giving 0.9652, slightly below R². Plain R² can never go down when you add a predictor. Adjusted R² can.</p>
+  <div class="lab">
+    <h3>🎮 Try it: add useless predictors</h3>
+    <p style="margin-bottom:4px">Pretend extra predictors add <b>nothing</b>, so R² stays at 0.9671. What happens to adjusted R²?</p>
+    <div class="ctl"><label for="c5k">Number of predictors k</label><input type="range" id="c5k" min="1" max="12" step="1" value="1"><output id="c5kO"></output></div>
+    <div class="stat-grid" id="c5kStats"></div>
+    <div class="read" id="c5kRead" aria-live="polite"></div>
+  </div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p><code>=RSQ(Model!B2:B21,Model!A2:A21)</code> for R², and <code>=1-(1-B5)*(B2-1)/(B2-2)</code> for adjusted R². “Adjusted R Square” is adjusted R², not an adjusted r, so do not take its square root.</p></div>
+
+  <div class="quiz" data-quiz="ch5"></div>
+  <div class="next"><a class="btn" href="#ch6">Next: typical miss and residual checks →</a></div>
+</section>
+
+<!-- CH6 -->
+<section class="chapter" id="ch6" data-ch="ch6" data-title="Typical miss and residual checks">
+  <div class="num">6</div>
+  <h2>The typical miss, and checking the line is fair</h2>
+  <p class="lead">R² says how much the line explains. Two more questions matter: <i>how big is a typical miss in BZD?</i> and <i>is a straight line even the right shape?</i></p>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Each week you estimate the takings from the advertising spend. The <b>residual standard error</b> is how far off that estimate typically is: the usual gap between your estimate and what the till actually shows. It is measured in BZD of sales. It is not the biggest miss, and it is not a percentage.</p></div>
+  <div class="eq">s = √( squared misses ÷ (n − 2) ) = BZD 237.68</div>
+  <p>Why n − 2 = 18? We used the data to work out <b>two</b> numbers (a and b) before measuring the misses, which uses up two “free pieces” of information. These leftover pieces are the <b>residual degrees of freedom</b>.</p>
+
+  <div class="lab">
+    <h3>🎮 Try it: how many dots fall inside the bands?</h3>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="c6b1" checked> Band: line ± 1 s</label>
+      <label class="chk"><input type="checkbox" id="c6b2"> Band: line ± 2 s</label>
+    </div>
+    <div class="plot" id="c6Plot"></div>
+    <div class="read" id="c6Read" aria-live="polite"></div>
+  </div>
+
+  <h3>Is the line the right shape? Look at the residuals</h3>
+  <p>Plot the residuals against the predicted values. If a straight line is a fair summary, you should see a <b>random cloud around zero</b>: no curve, no funnel, no lonely points.</p>
+  <div class="cards">
+    <div class="card"><h4>L: Linear</h4><p>The average of Y really moves in a straight line with X. A curve in the residuals breaks this.</p></div>
+    <div class="card"><h4>I: Independent</h4><p>One week’s miss doesn’t predict the next week’s. Check residuals in week order.</p></div>
+    <div class="card"><h4>N: Normal errors</h4><p>Misses are roughly bell-shaped. Matters most for exact small-sample tests and intervals.</p></div>
+    <div class="card"><h4>E: Equal spread</h4><p>The size of the misses stays about the same everywhere. A funnel breaks this.</p></div>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: residual plots, healthy and unhealthy</h3>
+    <div class="row" role="group" aria-label="Residual plot examples" id="c6Tabs"></div>
+    <div class="plot" id="c6RPlot"></div>
+    <div class="read" id="c6RRead" aria-live="polite"></div>
+  </div>
+  <div class="lab">
+    <h3>🕹️ Game: spot the pattern</h3>
+    <p style="margin-bottom:4px">A mystery residual plot appears. What does it show?</p>
+    <div class="plot" id="c6GPlot"></div>
+    <div class="row" id="c6GBtns"></div>
+    <div class="read" id="c6GRead" aria-live="polite">Pick an answer.</div>
+  </div>
+  <div class="callout watch"><b>⚠️ Watch out</b>
+    <p>With only 20 weeks, plots can’t prove the rules hold. They can only warn you when something looks wrong. Investigate unusual weeks (maybe a typo, maybe a holiday). Don’t delete them just to raise R².</p></div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p>Residual standard error: <code>=INDEX(LINEST(Model!B2:B21,Model!A2:A21,TRUE,TRUE),3,2)</code>. Residual plot: chart <code>Model!C1:D21</code> (predicted on X, residual on Y). Week plot: Week on X, residual on Y.</p></div>
+
+  <div class="quiz" data-quiz="ch6"></div>
+  <div class="next"><a class="btn" href="#ch7">Next: the p-value →</a></div>
+</section>
+
+<!-- CH7 -->
+<section class="chapter" id="ch7" data-ch="ch7" data-title="The p-value">
+  <div class="num">7</div>
+  <h2>The p-value: is the pattern real, or just luck?</h2>
+  <p class="lead">Our slope is 5.52. Maybe advertising really matters, or maybe the dots just happened to line up. How could we tell?</p>
+  <div class="callout start"><b>🌱 Start here: the simplest version</b>
+    <p>Here is the one question the p-value answers: <b>“If nothing special was going on, would I be surprised to see this?”</b></p>
+    <p>A friend says she can tell heads from tails with her eyes closed. She tries 10 flips and gets all 10 right. If she was only guessing, that would almost never happen. You would be very surprised. So maybe she is <i>not</i> just guessing.</p>
+    <p>If she got 6 right out of 10, that happens all the time by luck. You would not be surprised. So you cannot say she has a special skill.</p>
+    <ul><li><b>Small p</b> (like 0.001): very surprising if nothing is going on. So we believe something <i>is</i> going on.</li><li><b>Big p</b> (like 0.35): not surprising at all. Luck could easily explain it.</li></ul>
+    <p>For the shop, “nothing is going on” means advertising has <b>no</b> effect on sales. Our result is far too surprising for that idea, so we don’t believe it.</p></div>
+  <div class="lab">
+    <h3>🎮 Try it: the guessing game</h3>
+    <p style="margin-bottom:4px">Pretend 1,000 people each <b>just guess</b> 10 coin flips. The bars show how many of them got each score. Pick your friend’s score to see how surprising it would be.</p>
+    <div class="ctl"><label for="c7gK">Flips she got right</label><input type="range" id="c7gK" min="0" max="10" step="1" value="9"><output id="c7gKO"></output></div>
+    <div class="plot" id="c7gPlot"></div>
+    <div class="row"><button class="btn small alt" id="c7gRun">Run 1,000 new pretend guessers</button></div>
+    <div class="read" id="c7gRead" aria-live="polite"></div>
+  </div>
+  <div class="callout try"><b>🔗 Now connect it to regression</b>
+    <p>The pretend guessers are “nothing is going on”. In the shop version, nothing going on means advertising does <b>not</b> affect sales. Our real slope plays the part of your friend’s score. The shuffle test below makes pretend weeks to see how often luck alone gives a slope as steep as ours. That share of luck-only results <b>is</b> the p-value.</p></div>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>A skeptical business partner says: “Advertising and takings have <b>nothing to do</b> with each other. Your dots lined up by luck.” To test that, write each week’s till total on a slip of paper, <b>shuffle the slips</b>, and pin them to the weeks at random. Now advertising and takings truly have nothing to do with each other. Work out the slope. Do it again and again. If your <i>real</i> slope is far steeper than anything shuffling can make, the skeptic is in trouble. The <b>p-value</b> is how often shuffling alone gives a slope as extreme as yours.</p></div>
+
+  <div class="lab">
+    <h3>🎮 Try it: the shuffle test</h3>
+    <div class="row" role="group" aria-label="Which predictor to test">
+      <button class="chip" id="c7adv" aria-pressed="true">Test advertising</button>
+      <button class="chip" id="c7price" aria-pressed="false">Test average price</button>
+    </div>
+    <div class="two">
+      <div><b style="font-size:.95rem">Latest shuffle (sales dealt out at random)</b><div class="plot" id="c7ShPlot"></div></div>
+      <div><b style="font-size:.95rem">Slopes from many shuffles</b><div class="plot" id="c7HPlot"></div></div>
+    </div>
+    <div class="row">
+      <button class="btn small" id="c7s1">Shuffle once</button>
+      <button class="btn small alt" id="c7s100">Shuffle 100 times</button>
+      <button class="btn small alt" id="c7s1000">Shuffle 1,000 times</button>
+      <button class="chip" id="c7rs">Reset</button>
+    </div>
+    <div class="read" id="c7Read" aria-live="polite"></div>
+  </div>
+
+  <h3>The textbook version: hypotheses, t and p</h3>
+  <p>Statisticians write the skeptic’s claim as <b>H₀: β₁ = 0</b> (no linear relationship in the population) against <b>H₁: β₁ ≠ 0</b>. Before looking, pick a cut-off called <b>α = 0.05</b>.</p>
+  <div class="eq">t = slope ÷ SE(slope) = 5.5161 ÷ 0.2399 = 22.99</div>
+  <p><b>t</b> counts “how many standard errors away from zero is my slope?”. The <b>p-value</b> is the chance, <i>if H₀ were true</i> and the model assumptions hold, of getting a t at least this far from 0. Smaller p means the skeptic’s world makes our result look weirder.</p>
+  <ul>
+    <li><b>p &lt; 0.05:</b> reject H₀. There is evidence of a linear association.</li>
+    <li><b>p ≥ 0.05:</b> fail to reject H₀. That is <i>not</i> the same as proving there is no relationship. We just don’t have enough evidence.</li>
+  </ul>
+
+  <div class="lab">
+    <h3>🎮 Try it: t and the tails</h3>
+    <div class="row">
+      <button class="chip" id="c7tAdv">Use advertising (t = 22.99)</button>
+      <button class="chip" id="c7tPrice">Use price (t = −0.97)</button>
+    </div>
+    <div class="plot" id="c7tPlot"></div>
+    <div class="ctl"><label for="c7tS">Slide t (df = 18)</label><input type="range" id="c7tS" min="0" max="6" step="0.01" value="2.1"><output id="c7tSO"></output></div>
+    <div class="read" id="c7tRead" aria-live="polite"></div>
+  </div>
+
+  <div class="lab">
+    <h3>🧮 Calculator: your own t and p</h3>
+    <div class="row">
+      <label>Slope b <input type="number" id="c7b" value="5" step="any" style="width:100px"></label>
+      <label>SE of slope <input type="number" id="c7se" value="1.25" step="any" min="0.0001" style="width:100px"></label>
+      <label>df <input type="number" id="c7df" value="18" step="1" min="1" style="width:80px"></label>
+    </div>
+    <div class="read" id="c7Calc" aria-live="polite"></div>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: the surprise meter</h3>
+    <p style="margin-bottom:4px">Pick a p-value and see what it says in plain words.</p>
+    <div class="row" id="c7mChips"></div>
+    <div class="meter" aria-hidden="true"><i id="c7mMark"></i></div>
+    <div class="meter-l" aria-hidden="true"><span>Not surprising</span><span>Extremely surprising</span></div>
+    <div class="read" id="c7mRead" aria-live="polite"></div>
+  </div>
+  <div class="lab">
+    <h3>🎮 Try it: what makes p small?</h3>
+    <p style="margin-bottom:4px">Three things shrink p: a <b>stronger link</b>, <b>more weeks of data</b>, and less scatter. Try changing the strength and the number of weeks.</p>
+    <div class="ctl"><label for="c7rR">Strength of link (|r|)</label><input type="range" id="c7rR" min="0.05" max="0.95" step="0.01" value="0.40"><output id="c7rRO"></output></div>
+    <div class="ctl"><label for="c7rN">Number of weeks n</label><input type="range" id="c7rN" min="5" max="100" step="1" value="10"><output id="c7rNO"></output></div>
+    <div class="read" id="c7rRead" aria-live="polite"></div>
+    <div class="tbl" id="c7rTbl"></div>
+    <p style="font-size:.9rem;color:var(--muted);margin:6px 0 0">The same strength of link gives a smaller p with more weeks. So a tiny p can come from a <i>large sample</i> even when the link is weak. That is why you read r, R² and the slope too.</p>
+  </div>
+
+  <h3>Three myths (tap to reveal)</h3>
+  <details class="myth"><summary>❌ “p = 0.03 means there’s a 3% chance the null hypothesis is true.”</summary><p>No. The p-value assumes H₀ is true and asks how surprising the data are. It is not the probability that H₀ is true, and not the probability the result is “just chance”.</p></details>
+  <details class="myth"><summary>❌ “A tiny p-value means advertising has a big or causal effect.”</summary><p>No. Tiny p says the pattern is hard to blame on luck alone. Size comes from the slope (BZD 551.61 per BZD 100). Cause needs more than a p-value: holidays, promotions or item mix might drive both advertising and sales.</p></details>
+  <details class="myth"><summary>❌ “p = 0.35 proves price has no effect on sales.”</summary><p>No. It means these 20 weeks don’t give enough evidence of a straight-line link. Try the price test above: shuffling alone often beats the real slope.</p></details>
+  <div class="callout good"><b>✅ Same test, two names</b>
+    <p>With one predictor, “Significance F” in the ANOVA table and the slope’s p-value answer the same question. Also F = t². Very tiny p-values can differ in the last digits between software packages. Report <b>p &lt; 0.001</b>.</p></div>
+  <h3>Putting r, R² and p together</h3>
+  <p>Each number answers a different question. Together they tell the whole story.</p>
+  <div class="tbl" id="c7Sum"></div>
+  <div class="callout good"><b>✅ A routine you can reuse on any data set</b>
+    <p><b>1. Look at the plot.</b> Is there a straight-line pattern? Any odd weeks?<br>
+    <b>2. How tight?</b> Read r: direction and strength.<br>
+    <b>3. How much does it explain?</b> Read R².<br>
+    <b>4. Could it be luck?</b> Read the p-value.<br>
+    <b>5. How big, and how sure?</b> Read the slope and its confidence interval in real units (BZD).<br>
+    <b>6. Does it make business sense?</b> Check capacity, costs and other explanations before acting.</p></div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p><code>=T.DIST.2T(ABS(B13),B12)</code> turns the t statistic and residual df into a two-sided p-value. Format very small p-values in scientific notation.</p></div>
+
+  <div class="quiz" data-quiz="ch7"></div>
+  <div class="next"><a class="btn" href="#ch8">Next: confidence intervals →</a></div>
+</section>
+
+<!-- CH8 -->
+<section class="chapter" id="ch8" data-ch="ch8" data-title="Confidence intervals and margin of error">
+  <div class="num">8</div>
+  <h2>Confidence intervals and margin of error</h2>
+  <p class="lead">Our slope, 5.52, came from just 20 weeks. A different 20 weeks would give a slightly different slope. How much wiggle room should we allow?</p>
+  <div class="callout start"><b>🌱 Start here: the simplest version</b>
+    <p>The shop wrote down 20 weeks. The slope came out as 5.52. But if we had written down a <i>different</i> 20 weeks, we would get a slightly different number, maybe 5.3 or 5.8.</p>
+    <p>So 5.52 is a <b>good guess</b>, not a perfect fact. A <b>confidence interval</b> is the “give or take” around the guess. The <b>margin of error</b> is the give-or-take part.</p>
+    <p>We say: 5.52 give or take 0.50. So the real slope is probably between 5.01 and 6.02.</p>
+    <ul><li><b>Narrow interval:</b> a precise guess. We know the slope well.</li><li><b>Wide interval:</b> an unsure guess. We need more data.</li></ul>
+    <p>More weeks of data and tighter dots make the interval narrower. Asking to be more sure makes it wider.</p></div>
+  <div class="lab">
+    <h3>🎮 Try it: different weeks, different slope</h3>
+    <p style="margin-bottom:4px">These are <b>pretend weeks</b> made from a shop whose true slope is exactly 5.516. Each time you take 20 new weeks, the fitted line wobbles a little. The size of that wobble is the <b>standard error</b> of the slope.</p>
+    <div class="two">
+      <div><b style="font-size:.95rem">Latest 20 pretend weeks</b><div class="plot" id="c8wPlot"></div></div>
+      <div><b style="font-size:.95rem">Slopes from all the samples so far</b><div class="plot" id="c8wHist"></div></div>
+    </div>
+    <div class="row">
+      <button class="btn small" id="c8w1">Take another 20 weeks</button>
+      <button class="btn small alt" id="c8w100">Take 100 more</button>
+      <button class="chip" id="c8wr">Reset</button>
+    </div>
+    <div class="read" id="c8wRead" aria-live="polite"></div>
+  </div>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>A supplier tells you “delivery in about 2 to 3 days”. Not exactly 2.4, but a best estimate with room on both sides. That room is the <b>margin of error</b>. For our slope: best guess ± margin of error = <b>confidence interval</b>.</p></div>
+  <div class="eq">CI = b ± t* × SE(b) = 5.5161 ± 2.1009 × 0.2399 = [5.012, 6.020]</div>
+  <ul>
+    <li><b>SE(b)</b> = how much the slope typically wobbles from sample to sample.</li>
+    <li><b>t*</b> = a multiplier from the t distribution (2.1009 for 95% with 18 df). Higher confidence means a bigger multiplier.</li>
+    <li><b>Margin of error</b> = t* × SE = 0.504.</li>
+  </ul>
+
+  <div class="lab">
+    <h3>🎮 Try it: shrink or stretch the margin</h3>
+    <div class="row" role="group" aria-label="Confidence level">
+      <button class="chip" data-lv="0.90" aria-pressed="false">90%</button>
+      <button class="chip" data-lv="0.95" aria-pressed="true">95%</button>
+      <button class="chip" data-lv="0.99" aria-pressed="false">99%</button>
+    </div>
+    <div class="ctl"><label for="c8n">Weeks of data n</label><input type="range" id="c8n" min="6" max="200" step="1" value="20"><output id="c8nO"></output></div>
+    <div class="plot" id="c8Line"></div>
+    <div class="read" id="c8Read" aria-live="polite"></div>
+    <p style="font-size:.9rem;color:var(--muted);margin:0">For the n slider we imagine more weeks that look like ours (same spread of advertising and same typical miss).</p>
+  </div>
+
+  <h3>What does “95% confident” really mean?</h3>
+  <p>Imagine 20 parallel universes where the shop’s true slope is exactly 5.516, and in each one you record 20 weeks and build an interval. Most intervals catch the truth. A few miss. <b>95% describes the long-run hit rate of the method, not the chance for one finished interval.</b></p>
+  <div class="lab">
+    <h3>🎮 Try it: parallel universes</h3>
+    <div class="plot" id="c8CPlot"></div>
+    <div class="row">
+      <button class="btn small" id="c8c20">Run 20 new samples</button>
+      <button class="btn small alt" id="c8c500">Run 500 more (tally only)</button>
+      <button class="chip" id="c8cr">Reset tally</button>
+    </div>
+    <div class="read" id="c8CRead" aria-live="polite"></div>
+    <p style="font-size:.9rem;color:var(--muted);margin:0">Teal = caught the true slope. Coral = missed. Uses the level you picked above.</p>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: does the interval include zero?</h3>
+    <p style="margin-bottom:4px">Zero means “no effect”. If the interval for the slope <b>includes 0</b>, we cannot rule out that there is no effect. That matches what a large p-value says.</p>
+    <div class="row" role="group" aria-label="Choose slope">
+      <button class="chip" id="c8zadv" aria-pressed="true">Advertising slope</button>
+      <button class="chip" id="c8zprice" aria-pressed="false">Price slope</button>
+    </div>
+    <div class="plot" id="c8zPlot"></div>
+    <div class="read" id="c8zRead" aria-live="polite"></div>
+  </div>
+
+  <h3>Margin of error for a forecast: two different questions</h3>
+  <div class="cards">
+    <div class="card"><h4>Interval for the mean</h4><p>“What is the <b>average</b> sales across many weeks with this advertising?” Narrow.</p></div>
+    <div class="card"><h4>Prediction interval</h4><p>“What might <b>one</b> particular week’s sales be?” Wider, because it adds the week-to-week wiggle.</p></div>
+  </div>
+  <div class="lab">
+    <h3>🎮 Try it: forecast bands</h3>
+    <div class="plot" id="c8FPlot"></div>
+    <div class="ctl"><label for="c8FX">Advertising X₀</label><input type="range" id="c8FX" min="200" max="1500" step="5" value="700"><output id="c8FXO"></output></div>
+    <div class="read" id="c8FRead" aria-live="polite"></div>
+  </div>
+  <div class="callout watch"><b>⚠️ Watch out</b>
+    <p>Notice the bands flare out far from the middle of the data. And these intervals only work if the model assumptions hold. They also ignore the fact that we picked advertising after looking at the data. Confirm important decisions with new weeks.</p></div>
+  <div class="cards">
+    <div class="card"><h4>🗣️ Say it in a report</h4><p>“We are 95% confident the true slope is between <b>5.01 and 6.02</b> BZD of weekly sales per BZD of advertising.”</p></div>
+    <div class="card"><h4>💰 Translate it for the manager</h4><p>“Each extra BZD 100 of weekly advertising is associated with about <b>BZD 501 to BZD 602</b> more weekly sales.”</p></div>
+    <div class="card"><h4>❌ Don’t say</h4><p>“95% of weeks fall in this range”, or “there is a 95% chance the true slope is in <i>this</i> interval”.</p></div>
+    <div class="card"><h4>📏 Width tells you precision</h4><p>A narrow interval means a precise estimate. A very wide one means: collect more weeks before deciding.</p></div>
+  </div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p><code>=T.INV.2T(0.05,B12)</code> gives t*. Then lower = <code>=B9-B17*B10</code> and upper = <code>=B9+B17*B10</code>. For forecasts use h = 1/n + (X₀ − mean X)²/DEVSQ(X); the mean interval uses √h and the prediction interval uses √(1+h).</p></div>
+
+  <div class="quiz" data-quiz="ch8"></div>
+  <div class="next"><a class="btn" href="#ch9">Next: read the full output →</a></div>
+</section>
+
+<!-- CH9 -->
+<section class="chapter" id="ch9" data-ch="ch9" data-title="Reading the full output">
+  <div class="num">9</div>
+  <h2>Reading the full output like a pro</h2>
+  <p class="lead">Excel’s Analysis ToolPak (or your Google Sheets formulas) produces three small tables. Every number in them is something you now know.</p>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Think of it as the shop’s monthly accounts summary. <b>Regression Statistics</b> is the headline page. <b>ANOVA</b> splits the up-and-down in sales into “explained” and “left over”. <b>Coefficients</b> is the detailed ledger: the slope and intercept with their uncertainty.</p></div>
+  <div class="lab">
+    <h3>🎮 Try it: decode the table</h3>
+    <div class="row" role="group" aria-label="Mode">
+      <button class="chip" id="c9Explore" aria-pressed="true">Explore: tap any number</button>
+      <button class="chip" id="c9HuntBtn" aria-pressed="false">Treasure hunt</button>
+    </div>
+    <div class="xl" id="c9Xl"></div>
+    <div class="read" id="c9Panel" aria-live="polite">Tap a number to see what it means.</div>
+  </div>
+  <div class="callout good"><b>✅ Quick sanity checks (Learning check 4 in your lab)</b>
+    <p>Total SS = Regression SS + Residual SS. Total df = 19 and residual df = 18. And F should equal t². If they don’t, look at your cell references before interpreting anything.</p></div>
+  <div class="callout sheet"><b>📋 In your spreadsheet</b>
+    <p>ToolPak route: Data → Data Analysis → Regression, Y range <code>Data!$D$1:$D$21</code>, X range <code>Data!$B$1:$B$21</code>, tick Labels, 95% confidence. Google Sheets route: build the same tables from <code>SLOPE</code>, <code>INTERCEPT</code>, <code>RSQ</code> and <code>INDEX(LINEST(…),r,c)</code>.</p></div>
+
+  <div class="quiz" data-quiz="ch9"></div>
+  <div class="next"><a class="btn" href="#ch10">Next: decision time →</a></div>
+</section>
+
+<!-- CH10 -->
+<section class="chapter" id="ch10" data-ch="ch10" data-title="From numbers to a decision">
+  <div class="num">10</div>
+  <h2>From numbers to a manager’s decision</h2>
+  <p class="lead">A good analyst doesn’t stop at “p &lt; 0.05”. The manager wants to know: <i>should we spend more?</i></p>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Think of the weeks before Christmas or around pay-day: the shop runs <b>more advertising</b>, and customers arrive with <b>more money to spend</b> anyway. Advertising and sales are both riding on the holiday rush, so part of the link may not be advertising’s doing. That’s why we say <b>“is associated with”</b>, not “causes”.</p></div>
+
+  <div class="lab">
+    <h3>🧮 Calculator: is the extra advertising worth it?</h3>
+    <div class="ctl"><label for="c10E">Extra weekly advertising</label><input type="range" id="c10E" min="50" max="400" step="10" value="100"><output id="c10EO"></output></div>
+    <div class="ctl"><label for="c10M">Gross margin</label><input type="range" id="c10M" min="5" max="60" step="1" value="30"><output id="c10MO"></output></div>
+    <div class="stat-grid" id="c10Stats"></div>
+    <div class="read" id="c10Read" aria-live="polite"></div>
+    <p style="font-size:.9rem;color:var(--muted);margin:0">This is a scenario calculation, not a proven return. It assumes the fitted revenue difference is fully achievable and ignores other costs.</p>
+  </div>
+
+  <h3>Questions a manager should ask</h3>
+  <div class="cards">
+    <div class="card"><h4>Big enough?</h4><p>Is BZD 552 of weekly revenue per BZD 100 of ads worth acting on?</p></div>
+    <div class="card"><h4>Profitable?</h4><p>Does gross margin cover the ad cost? Use the calculator.</p></div>
+    <div class="card"><h4>Capacity?</h4><p>Do we have stock and staff to handle extra sales?</p></div>
+    <div class="card"><h4>Something else?</h4><p>Holidays, promotions or item mix could drive both ads and sales.</p></div>
+  </div>
+
+  <div class="lab">
+    <h3>✅ Checklist for your 150–200 word recommendation</h3>
+    <p style="margin-bottom:6px">Tick each item when your report covers it.</p>
+    <div id="c10List"></div>
+    <div class="read" id="c10ListRead" aria-live="polite"></div>
+  </div>
+
+  <div class="quiz" data-quiz="ch10"></div>
+  <div class="next"><a class="btn" href="#ch11">Next: sneak peek at multiple regression →</a></div>
+</section>
+
+<!-- CH11 -->
+<section class="chapter" id="ch11" data-ch="ch11" data-title="Sneak peek: multiple regression">
+  <div class="num">11</div>
+  <h2>Sneak peek: multiple regression</h2>
+  <p class="lead">So far one clue (X) predicted sales. But the shop recorded <i>two</i> clues. What if we use both at once? That is <b>multiple linear regression</b>, and it is the topic for next week.</p>
+  <div class="callout kid"><b>🛒 Shop-floor view</b>
+    <p>Sales in any week depend on more than one thing: advertising, the prices on the shelf, what is in stock. Simple regression looks at one factor at a time. Multiple regression looks at several together and asks: <b>if I change just this one factor and keep the others the same, what happens to takings?</b></p></div>
+  <div class="eq">Ŷ = b₀ + b₁·Advertising + b₂·Price</div>
+  <p>Each coefficient now has a “<b>holding the others constant</b>” meaning. b₁ is the change in predicted sales for BZD 1 more advertising <i>among weeks with the same average price</i>.</p>
+  <div class="callout watch"><b>⚠️ Just a preview</b>
+    <p>In your lab you fit only the simple model and are told <i>not</i> to fit a multiple regression. This chapter is a peek ahead using the same data. Next week we’ll build it properly.</p></div>
+
+  <div class="lab">
+    <h3>🎮 Look: what’s left after advertising has done its job?</h3>
+    <p style="margin-bottom:4px">Left axis: sales leftovers after advertising (the residuals). Bottom axis: the part of price that advertising doesn’t already explain. If price still mattered, these dots would show a clear slope.</p>
+    <div class="plot" id="c11Plot"></div>
+    <div class="read" id="c11Read" aria-live="polite"></div>
+  </div>
+
+  <div class="lab">
+    <h3>🎮 Try it: predict with two clues</h3>
+    <div class="ctl"><label for="c11A">Advertising</label><input type="range" id="c11A" min="300" max="1000" step="10" value="700"><output id="c11AO"></output></div>
+    <div class="ctl"><label for="c11P">Average price</label><input type="range" id="c11P" min="22" max="26" step="0.5" value="24"><output id="c11PO"></output></div>
+    <div class="read" id="c11Pred" aria-live="polite"></div>
+  </div>
+
+  <h3>Simple vs multiple on the same 20 weeks</h3>
+  <div class="tbl" id="c11Tbl"></div>
+  <div class="cards">
+    <div class="card"><h4>What happened?</h4><p>Adding price nudged R² up a hair, but price’s own p-value is large. Price adds little once advertising is in.</p></div>
+    <div class="card"><h4>Why did the advertising slope move?</h4><p>Because each coefficient now adjusts for the other. Advertising and price are slightly related, so they share a little information.</p></div>
+    <div class="card"><h4>Next week</h4><p>Reading coefficients “holding others constant”, the overall F-test, adjusted R², and why too-similar predictors cause trouble.</p></div>
+  </div>
+
+  <div class="quiz" data-quiz="ch11"></div>
+  <div class="next"><a class="btn" href="#ch12">Next: final challenge →</a></div>
+</section>
+
+<!-- CH12 -->
+<section class="chapter" id="ch12" data-ch="ch12" data-title="Final challenge and cheat sheet">
+  <div class="num">12</div>
+  <h2>Final challenge</h2>
+  <p class="lead">Ten mixed questions across the whole journey. Take your time. You can keep trying each one until you get it.</p>
+  <div class="quiz" data-quiz="ch12"></div>
+  <div class="read" id="c12Score" aria-live="polite" style="display:none"></div>
+
+  <h3 style="margin-top:34px">📒 Cheat sheet</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Idea</th><th>In one line</th><th>Spreadsheet</th></tr></thead>
+    <tbody>
+      <tr><td><b>Y, X</b></td><td>Y is what we predict (sales); X is the clue.</td><td></td></tr>
+      <tr><td><b>Residual</b></td><td>Actual − predicted. Positive = above the line.</td><td><code>=B2-C2</code></td></tr>
+      <tr><td><b>Least squares</b></td><td>Line with the smallest sum of squared residuals.</td><td></td></tr>
+      <tr><td><b>Slope b</b></td><td>Change in predicted Y per 1 unit of X (BZD of sales per BZD of ads).</td><td><code>SLOPE</code></td></tr>
+      <tr><td><b>Intercept a</b></td><td>Predicted Y at X = 0. Often an extrapolation.</td><td><code>INTERCEPT</code></td></tr>
+      <tr><td><b>r</b></td><td>Direction and strength of straight-line link, −1 to +1.</td><td><code>CORREL</code></td></tr>
+      <tr><td><b>R²</b></td><td>Share of sample variation in Y explained by the line. In simple regression R² = r².</td><td><code>RSQ</code></td></tr>
+      <tr><td><b>Adjusted R²</b></td><td>R² with a penalty for extra predictors.</td><td><code>1-(1-R²)(n-1)/(n-k-1)</code></td></tr>
+      <tr><td><b>Residual SE (s)</b></td><td>Typical miss around the line, in BZD.</td><td><code>INDEX(LINEST(…),3,2)</code></td></tr>
+      <tr><td><b>SE of slope</b></td><td>How much the slope wobbles between samples.</td><td><code>INDEX(LINEST(…),2,1)</code></td></tr>
+      <tr><td><b>t, p</b></td><td>t = b ÷ SE. p = how surprising that t is if the true slope were 0.</td><td><code>T.DIST.2T</code></td></tr>
+      <tr><td><b>Confidence interval</b></td><td>b ± t* × SE. Margin of error = t* × SE.</td><td><code>T.INV.2T</code></td></tr>
+      <tr><td><b>Prediction interval</b></td><td>Range for one future week. Wider than the mean interval.</td><td></td></tr>
+      <tr><td><b>Extrapolation</b></td><td>Predicting outside the observed X range. Risky.</td><td></td></tr>
+      <tr><td><b>LINE</b></td><td>Linear, Independent, Normal errors, Equal spread.</td><td>residual plots</td></tr>
+      <tr><td><b>Association ≠ cause</b></td><td>Use “is associated with” for observational data.</td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="margin-top:34px">📝 Reflection (from your lab)</h3>
+  <p>Write a sentence or two for each. They are saved in your browser only and never sent anywhere.</p>
+  <label for="refl1" style="font-weight:700">Which step can you now do independently?</label>
+  <textarea id="refl1" data-save="refl1"></textarea>
+  <label for="refl2" style="font-weight:700;display:block;margin-top:10px">Which step needs more practice?</label>
+  <textarea id="refl2" data-save="refl2"></textarea>
+  <label for="refl3" style="font-weight:700;display:block;margin-top:10px">One question for your lecturer:</label>
+  <textarea id="refl3" data-save="refl3"></textarea>
+  <p style="margin-top:14px"><a class="btn alt" href="#top">Back to the top ↑</a></p>
+</section>
+
+<footer>EC 2209 Linear Regression • SJCJC • Business sales lab companion. Simulated teaching data. Next in the series: multiple linear regression.</footer>
+</main>
+</div>
+<script>
+(function(){
+'use strict';
+/* ============ DATA (from EC2209 student workbook) ============ */
+const ADV=[300,650,450,900,550,350,800,500,1000,400,750,600,950,700,850,325,575,975,425,775];
+const PRICE=[24,23,25,22,24,26,23,25,22,24,26,23,25,22,24,25,23,26,22,24];
+const SALES=[4130,5660,5080,7190,5545,3835,6905,4905,8170,4320,6435,5885,7130,6430,6895,4302,5288,7712,4568,6472];
+const N=ADV.length;
+
+/* ============ HELPERS ============ */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const mean=a=>sum(a)/a.length;
+const fN=(v,d)=>Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const f0=v=>fN(Math.round(v),0);
+const f2=v=>fN(v,2);
+const f4=v=>fN(v,4);
+const sg=(v,d)=>(v<0?'−':'+')+fN(Math.abs(v),d===undefined?2:d);
+const sci=v=>{const e=v.toExponential(3);const [m,x]=e.split('e');return m+'e'+(+x);};
+const pfmt=p=>p<0.001?sci(p):fN(p,4);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ============ STATS ============ */
+function fit(x,y){
+  const n=x.length,mx=mean(x),my=mean(y);
+  let sxx=0,sxy=0,syy=0;
+  for(let i=0;i<n;i++){sxx+=(x[i]-mx)**2;sxy+=(x[i]-mx)*(y[i]-my);syy+=(y[i]-my)**2;}
+  const b=sxy/sxx,a=my-b*mx;
+  const yh=x.map(v=>a+b*v),res=y.map((v,i)=>v-yh[i]);
+  const sse=sum(res.map(r=>r*r));
+  const df=n-2,s=Math.sqrt(sse/df),seb=s/Math.sqrt(sxx),sea=s*Math.sqrt(1/n+mx*mx/sxx);
+  return {n,mx,my,sxx,sxy,syy,b,a,yh,res,sse,sst:syy,ssr:syy-sse,r:sxy/Math.sqrt(sxx*syy),r2:1-sse/syy,df,s,seb,sea,tb:b/seb,ta:a/sea};
+}
+function corr(x,y){const n=x.length,mx=mean(x),my=mean(y);let a=0,b=0,c=0;for(let i=0;i<n;i++){a+=(x[i]-mx)*(y[i]-my);b+=(x[i]-mx)**2;c+=(y[i]-my)**2;}return a/Math.sqrt(b*c);}
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+0.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++){y+=1;s+=c[j]/y;}return -t+Math.log(2.5066282746310005*s/x);}
+function betacf(a,b,x){const FP=1e-300,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-16)break;}
+  return h;}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function pTwo(t,df){return ibeta(df/(df+t*t),df/2,0.5);}
+function tcrit(conf,df){const al=1-conf;let lo=0,hi=1000;for(let i=0;i<120;i++){const m=(lo+hi)/2;if(pTwo(m,df)>al)lo=m;else hi=m;}return (lo+hi)/2;}
+function tpdf(t,df){return Math.exp(lgamma((df+1)/2)-lgamma(df/2))/Math.sqrt(df*Math.PI)*Math.pow(1+t*t/df,-(df+1)/2);}
+function mlr(cols,y){
+  const n=y.length,k=cols.length+1;
+  const X=y.map((_,i)=>[1].concat(cols.map(c=>c[i])));
+  const A=Array.from({length:k},(_,i)=>Array.from({length:k},(_,j)=>sum(X.map(r=>r[i]*r[j]))));
+  const v=Array.from({length:k},(_,i)=>sum(X.map((r,t)=>r[i]*y[t])));
+  const M=A.map((r,i)=>r.concat(Array.from({length:k},(_,j)=>i===j?1:0)));
+  for(let i=0;i<k;i++){let p=i;for(let r=i+1;r<k;r++)if(Math.abs(M[r][i])>Math.abs(M[p][i]))p=r;[M[i],M[p]]=[M[p],M[i]];
+    const d=M[i][i];for(let j=0;j<2*k;j++)M[i][j]/=d;
+    for(let r=0;r<k;r++)if(r!==i){const f=M[r][i];for(let j=0;j<2*k;j++)M[r][j]-=f*M[i][j];}}
+  const inv=M.map(r=>r.slice(k));
+  const b=inv.map(r=>sum(r.map((q,j)=>q*v[j])));
+  const yh=X.map(r=>sum(r.map((q,j)=>q*b[j])));
+  const res=y.map((q,i)=>q-yh[i]);const sse=sum(res.map(r=>r*r));const my=mean(y);const sst=sum(y.map(q=>(q-my)**2));
+  const df=n-k,s2=sse/df;const se=inv.map((r,i)=>Math.sqrt(r[i]*s2));const t=b.map((q,i)=>q/se[i]);const p=t.map(q=>pTwo(Math.abs(q),df));
+  const r2=1-sse/sst;return {b,se,t,p,df,s:Math.sqrt(s2),r2,adj:1-(1-r2)*(n-1)/(n-k),res};
+}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function normals(n,seed){const r=rng(seed),a=[];for(let i=0;i<n;i++){const u=r()||1e-9,v=r();a.push(Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v));}return a;}
+function randn(){const u=Math.random()||1e-9,v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function stdz(a){const m=mean(a),s=Math.sqrt(sum(a.map(v=>(v-m)**2))/(a.length-1));return a.map(v=>(v-m)/s);}
+
+const FA=fit(ADV,SALES),FP=fit(PRICE,SALES);
+const T95=tcrit(0.95,18);
+
+/* ============ CHART FRAME ============ */
+let UID=0;
+const R1=v=>+v.toFixed(1);
+function frame(el,o){
+  const W=Math.max(300,Math.floor(el.clientWidth||600));
+  const H=o.h||Math.round(clamp(W*0.62,240,430));
+  const narrow=W<460;
+  const m=Object.assign({l:narrow?52:62,r:14,t:12,b:narrow?44:50},o.m||{});
+  const pw=W-m.l-m.r,ph=H-m.t-m.b,x0=o.x[0],x1=o.x[1],y0=o.y[0],y1=o.y[1];
+  const sx=v=>R1(m.l+(v-x0)/(x1-x0)*pw),sy=v=>R1(m.t+ph-(v-y0)/(y1-y0)*ph);
+  const id='cp'+(++UID);let g='';
+  (o.xt||[]).forEach(t=>{const X=sx(t);g+=`<line class="grid" x1="${X}" y1="${m.t}" x2="${X}" y2="${m.t+ph}"/><text class="tick" x="${X}" y="${m.t+ph+16}" text-anchor="middle">${o.fx?o.fx(t):t}</text>`;});
+  (o.yt||[]).forEach(t=>{const Y=sy(t);g+=`<line class="grid" x1="${m.l}" y1="${Y}" x2="${m.l+pw}" y2="${Y}"/><text class="tick" x="${m.l-6}" y="${Y+4}" text-anchor="end">${o.fy?o.fy(t):t}</text>`;});
+  g+=`<line class="axis" x1="${m.l}" y1="${m.t+ph}" x2="${m.l+pw}" y2="${m.t+ph}"/><line class="axis" x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${m.t+ph}"/>`;
+  if(o.xl)g+=`<text class="alabel" x="${m.l+pw/2}" y="${H-6}" text-anchor="middle">${o.xl}</text>`;
+  if(o.yl)g+=`<text class="alabel" transform="translate(13 ${m.t+ph/2}) rotate(-90)" text-anchor="middle">${o.yl}</text>`;
+  return {W,H,m,pw,ph,sx,sy,x0,x1,y0,y1,
+    open:`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label||'chart'}"><defs><clipPath id="${id}"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs>${g}<g clip-path="url(#${id})">`,
+    mid:'</g>',close:'</svg>',
+    inv:(px,py)=>[x0+(px-m.l)/pw*(x1-x0),y0+(m.t+ph-py)/ph*(y1-y0)]};
+}
+function dotsSVG(c,xs,ys,sel,r){return xs.map((x,i)=>{const s=sel===i;return `<circle class="dot${s?' sel':''}" data-i="${i}" cx="${c.sx(x)}" cy="${c.sy(ys[i])}" r="${s?(r||5.5)+2:(r||5.5)}"><title>Week ${i+1}</title></circle>`;}).join('');}
+function bindDots(el,fn){$$('.dot',el).forEach(d=>{const i=+d.dataset.i;d.addEventListener('click',()=>fn(i));d.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')fn(i);});});}
+function lineSVG(c,xa,xb,fa,fb,cls){return `<line class="${cls||'fit'}" x1="${c.sx(xa)}" y1="${c.sy(fa)}" x2="${c.sx(xb)}" y2="${c.sy(fb)}"/>`;}
+const draws=[];
+function reg(f){draws.push(f);f();return f;}
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>draws.forEach(f=>f()),120);});
+const YT=[3000,4000,5000,6000,7000,8000,9000];
+function setPressed(btns,on){btns.forEach(b=>b.setAttribute('aria-pressed',b===on?'true':'false'));}
+function onInput(sel,f){$$(sel).forEach(e=>e.addEventListener('input',f));}
+
+/* ============ STATE + PROGRESS ============ */
+const KEY='ec2209-regression-journey-v1';
+let S={done:{},ok:{},first:{},txt:{},chk:{}};
+try{const s=localStorage.getItem(KEY);if(s)S=Object.assign(S,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const CH=$$('section.chapter');
+const navList=$('#navList');
+CH.forEach((s,i)=>{const li=document.createElement('li');li.innerHTML=`<a href="#${s.id}" data-ch="${s.id}"><span class="ck">${i+1}</span><span>${s.dataset.title}</span></a>`;navList.appendChild(li);});
+function updateProgress(){
+  const d=CH.filter(s=>S.done[s.id]).length;
+  $('#pbar').style.width=(d/CH.length*100)+'%';
+  $('#ptxt').textContent=d+' of '+CH.length+' done';
+  $('#pbarWrap').setAttribute('aria-valuenow',d);
+  $$('#navList a').forEach(a=>{const ok=!!S.done[a.dataset.ch];a.classList.toggle('done',ok);$('.ck',a).textContent=ok?'✓':(CH.findIndex(s=>s.id===a.dataset.ch)+1);});
+}
+$('#menuBtn').addEventListener('click',()=>{const o=$('#side').classList.toggle('open');$('#menuBtn').setAttribute('aria-expanded',o);});
+$$('#navList a').forEach(a=>a.addEventListener('click',()=>{$('#side').classList.remove('open');$('#menuBtn').setAttribute('aria-expanded','false');}));
+let rc=0;const rb=$('#resetBtn');
+rb.addEventListener('click',()=>{if(!rc){rc=1;rb.textContent='Click again to confirm reset';setTimeout(()=>{rc=0;rb.textContent='Reset my progress';},4000);}else{S={done:{},ok:{},first:{},txt:{},chk:{}};save();location.reload();}});
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){$$('#navList a').forEach(a=>a.classList.toggle('cur',a.dataset.ch===e.target.id));}});},{rootMargin:'-20% 0px -70% 0px'});
+  CH.forEach(s=>io.observe(s));
+}
+
+/* ============ QUIZ DATA ============ */
+const QZ={
+ch1:[
+ {t:'open',q:'📝 <b>Learning check 1 (write first).</b> In your own words: what is Y? What are the two candidate X variables? Why should weekly sales be on the vertical axis in both graphs?',
+  e:'<b>Model answer:</b> Y is weekly sales revenue (BZD). The two candidate X variables are advertising spending and average selling price. Sales stays on the vertical axis in both graphs because it is the thing we want to predict, so both graphs answer the same question and can be compared fairly.'},
+ {t:'mc',q:'What is Y in the shop’s case?',o:[['Advertising spending',0,'Advertising is one of the two clues (an X), not the thing we predict.'],['Average selling price',0,'Price is the other clue (an X).'],['Weekly sales revenue',1],['The week number',0,'Week is just a label for each row. It is not what we are trying to predict.']],
+  e:'Y is the quantity we want to explain or predict: weekly sales revenue in BZD (revenue, not profit or number of items).'},
+ {t:'mc',q:'Which chart is right for asking “does more advertising go with more sales?”',o:[['A line chart with Week on the bottom axis',0,'That shows what happened over time, not the link between two variables.'],['A scatterplot with advertising on the horizontal axis and sales on the vertical axis',1],['A pie chart of the 20 weeks',0,'A pie chart can’t show a relationship between two numeric variables.'],['A bar chart of the week numbers',0,'The week numbers aren’t the variables we are comparing.']],
+  e:'A scatterplot puts one dot per week at (X, Y), which is exactly what we need to see direction and strength.'}
+],
+ch2:[
+ {t:'num',q:'A fitted line is Ŷ = 2000 + 5X. Predict revenue (in BZD) when X = 600.',a:5000,tol:0.5,hint:'Put 600 in place of X: 2000 + 5 × 600.',e:'2000 + 5 × 600 = 2000 + 3000 = <b>5,000</b>.'},
+ {t:'mc',q:'In that line, does the slope (5) mean BZD 5 of <i>profit</i> for each BZD of advertising?',o:[['Yes, slope always measures profit',0,'Careful: Y here is sales revenue, so the slope is revenue per unit of X.'],['No. It is revenue. Costs and margin still have to be considered',1],['Yes, but only when X is above 0',0,'The units of the slope come from Y and X, not from the size of X.'],['No. It means sales grow by 5%',0,'The slope is in BZD of Y per BZD of X, not a percentage.']],
+  e:'The slope is in revenue units. Profit depends on gross margin and extra expenses, which regression on revenue alone doesn’t include.'},
+ {t:'num',q:'In one week actual sales were BZD 6,200 and the line predicted BZD 6,000. What is the residual (actual − predicted)?',a:200,tol:0.5,hint:'Residual = Y − Ŷ.',e:'6,200 − 6,000 = <b>+200</b>. Positive: the dot is above the line, so sales beat the prediction.'},
+ {t:'mc',q:'A residual of −150 means…',o:[['Actual sales were BZD 150 below the prediction (dot below the line)',1],['Actual sales were BZD 150 above the prediction',0,'That would be +150. Negative means below.'],['Advertising was negative that week',0,'Residuals are about the gap in Y, not about X.'],['The line is wrong by 150%',0,'Residuals are in BZD, not percentages.']],
+  e:'Residual = actual − predicted. A negative residual means the actual value fell short of the prediction.'}
+],
+ch3:[
+ {t:'num',q:'Use Ŷ = 2305.63 + 5.5161 × X. Predict weekly sales (BZD) when advertising is BZD 800.',a:6718.5,tol:1,hint:'5.5161 × 800 = 4,412.88. Then add the intercept.',e:'2305.63 + 5.5161 × 800 = <b>6,718.5</b> (matches the fitted value for Week 7 in the answer key).'},
+ {t:'mc',q:'What does the slope 5.5161 mean here?',o:[['Each extra BZD 1 of advertising goes with about BZD 5.52 more weekly sales revenue, on average',1],['Each BZD 1 of advertising makes exactly BZD 5.52 of profit',0,'Slope is about revenue, and “goes with” is not the same as “makes”.'],['Sales rise by 5.5161%',0,'The slope is in BZD per BZD, not a percentage.'],['Advertising explains 5.5% of sales',0,'That would be about R², not the slope.']],
+  e:'Slope = change in predicted Y for one more unit of X. For BZD 100 more advertising: 100 × 5.5161 = BZD 551.61 more revenue, associated, not guaranteed.'},
+ {t:'mc',q:'Why should we be careful with the intercept 2,305.63?',o:[['It is predicted sales at zero advertising, but we never saw a week below BZD 300, so it is an extrapolation',1],['Intercepts are always wrong',0,'Intercepts can be fine when X = 0 is inside the data. Here it isn’t.'],['It is the shop’s profit',0,'The intercept is in sales revenue units.'],['It must always equal 0',0,'There is no such rule.']],
+  e:'Zero advertising is outside the observed range (300 to 1,000), so treat the intercept as a mathematical anchor for the line, not a trustworthy “no-ads baseline”.'},
+ {t:'mc',q:'Which prediction is the <b>least</b> trustworthy?',o:[['X = 500',0,'500 is inside the observed range.'],['X = 700',0,'700 is inside the observed range.'],['X = 1,500',1],['X = 900',0,'900 is inside the observed range.']],
+  e:'BZD 1,500 is outside 300 to 1,000, which is extrapolation. The line predicts 10,579.83 but we have no evidence the shop behaves that way.'}
+],
+ch4:[
+ {t:'mc',q:'Which linear relationship is <b>stronger</b>: r = −0.85 or r = +0.60?',o:[['r = −0.85',1],['r = +0.60',0,'Strength is |r|. Ignore the sign: 0.85 beats 0.60.'],['They are equally strong because they have opposite signs',0,'The sign only gives direction.'],['You can’t tell without the slope',0,'r alone tells strength.']],
+  e:'Strength is the size of r, ignoring the sign. |−0.85| = 0.85 &gt; 0.60. The minus sign only says the line goes downhill.'},
+ {t:'mc',q:'Shop data: advertising r = +0.9834, price r = −0.2222. What do they say?',o:[['Advertising: strong and upward. Price: weak and downward',1],['Price is stronger because its r is negative',0,'Negative doesn’t mean stronger. Compare |r|.'],['Both relationships are equally strong',0,'0.9834 is far bigger than 0.2222.'],['Advertising is weak and price is strong',0,'It’s the other way round.']],
+  e:'Compare |r|: 0.9834 vs 0.2222. Advertising wins by a lot, and its dots climb ↗ while price drifts slightly ↘.'},
+ {t:'mc',q:'A scatterplot shows a clear U-shaped curve, yet r ≈ 0. Why?',o:[['r only measures <i>straight-line</i> togetherness, and a symmetrical curve has none',1],['The data must have errors',0,'The data can be perfectly fine.'],['r = 0 always means no relationship at all',0,'Not true: curved relationships can give r ≈ 0.'],['r can’t be calculated for curves',0,'It can be calculated. It just doesn’t describe curves well.']],
+  e:'That is why you should always look at the scatterplot before trusting r.'},
+ {t:'mc',q:'Does r = 0.98 between advertising and sales prove that advertising <i>causes</i> sales?',o:[['Yes, 0.98 is very high',0,'A high r shows the two move together, not why.'],['No. It shows a strong association, but other things (holidays, promotions) could drive both',1],['Yes, if p &lt; 0.05',0,'p-values don’t prove cause either.'],['Only if the slope is positive',0,'The sign of the slope doesn’t decide cause.']],
+  e:'These are observational data, so say “is associated with”, not “causes”.'}
+],
+ch5:[
+ {t:'mc',q:'R² = 0.80 means…',o:[['The line accounts for 80% of the sample’s variation in Y around its mean',1],['Predictions are 80% accurate',0,'R² is not an accuracy rate.'],['X causes 80% of the sales',0,'R² doesn’t measure cause.'],['80% of the dots lie exactly on the line',0,'Dots rarely sit exactly on the line.']],
+  e:'R² = share of the up-and-down in Y explained by the fitted line, in this sample.'},
+ {t:'num',q:'For price, r = −0.2222. What is R² (as a decimal, 4 places)?',a:0.0494,tol:0.0005,hint:'In simple regression R² = r². Square the number (the minus sign disappears).',e:'(−0.2222)² = <b>0.0494</b>. Price explains only about 4.9% of the variation in sales.'},
+ {t:'mc',q:'Excel prints “Multiple R = 0.90” and your scatterplot slopes <i>downward</i>. What is the signed r?',o:[['−0.90',1],['+0.90',0,'Multiple R is always positive, so it hides the sign. The downward slope tells us r is negative.'],['0.81',0,'0.81 is R², not r.'],['−0.81',0,'−0.81 mixes up r and R².']],
+  e:'In simple regression Multiple R = |r|. Use CORREL (or the slope’s sign) for direction.'},
+ {t:'mc',q:'What happens when you add another predictor that adds almost nothing?',o:[['R² can’t go down, but adjusted R² can',1],['Both always go up',0,'Adjusted R² can fall if the new predictor doesn’t help enough.'],['Both always go down',0,'R² never goes down when you add a predictor.'],['Neither changes',0,'R² usually nudges up at least a little.']],
+  e:'That is exactly why adjusted R² exists: it penalises complexity.'}
+],
+ch6:[
+ {t:'mc',q:'Residual standard error = BZD 237.68. What does that tell you?',o:[['A typical miss of the line, about BZD 238 of sales',1],['The biggest possible miss',0,'It is a typical size, not a maximum.'],['The line is wrong 237.68% of the time',0,'It is in BZD, not a percentage.'],['How uncertain the slope is',0,'That is the standard error of the slope (0.2399), a different thing.']],
+  e:'Residual standard error estimates the standard deviation of the errors around the line, in the units of Y.'},
+ {t:'mc',q:'Why are the residual degrees of freedom 18 (not 20)?',o:[['We estimated two numbers (a and b) from the data, so n − 2 = 18',1],['Two weeks were deleted',0,'All 20 weeks were used.'],['It is always 18',0,'It depends on n and the number of estimated coefficients.'],['Because R² = 0.9671',0,'df has nothing to do with R².']],
+  e:'df = n − (number of estimated coefficients) = 20 − 2.'},
+ {t:'mc',q:'A residual plot shaped like a <b>funnel</b> (spread gets wider to the right) suggests…',o:[['The size of the errors changes (unequal spread), so ordinary standard errors and intervals may be unreliable',1],['The model is perfect',0,'A funnel is a warning sign.'],['The data must be normal',0,'Normality is a different check.'],['X and Y are unrelated',0,'A funnel is about the spread of errors, not whether there is a relationship.']],
+  e:'Equal spread (the E in LINE) is broken by a funnel.'},
+ {t:'mc',q:'In the week-order residual plot, you see a long run of positive residuals, then a long run of negative ones. What might that mean?',o:[['The errors may be dependent across weeks (for example seasonality)',1],['The data are perfect',0,'Long runs are a warning for independence.'],['The slope is wrong',0,'It points at dependence of errors, not directly at the slope.'],['Nothing at all',0,'Patterns like this are worth investigating.']],
+  e:'Independence (the I in LINE) can fail with time-ordered data like weekly sales.'}
+],
+ch7:[
+ {t:'mc',q:'A slope test gives p = 0.12 at α = 0.05. What is the right conclusion?',o:[['Fail to reject H₀: not enough evidence of a linear relationship. This does not prove there is none',1],['Reject H₀',0,'0.12 is bigger than 0.05, so we do not reject.'],['There is a 12% chance H₀ is true',0,'p-values are not the probability that H₀ is true.'],['The relationship is zero',0,'Failing to reject is not proof of no relationship.']],
+  e:'p ≥ α → fail to reject H₀. Absence of evidence isn’t evidence of absence, especially with only 20 weeks.'},
+ {t:'mc',q:'Which is the best description of a p-value?',o:[['If there were truly no linear relationship, the chance of seeing a slope at least this extreme just by luck',1],['The probability that the null hypothesis is true',0,'That’s the most common myth.'],['The probability that our forecast is correct',0,'p-values say nothing directly about forecast accuracy.'],['The percentage of sales explained',0,'That’s R².']],
+  e:'The p-value assumes H₀ is true and asks how surprising our data would be.'},
+ {t:'mc',q:'Which is a good reason a model with a tiny p-value might still be a poor basis for a decision?',o:[['The association may not be causal, the effect may be small, or residuals may show problems',1],['Tiny p-values are always mistakes',0,'They’re not mistakes; they just don’t tell the whole story.'],['p-values only work for n &gt; 1000',0,'They work for small n too, under assumptions.'],['A tiny p-value means R² must be 1',0,'No connection like that exists.']],
+  e:'Statistical evidence ≠ practical importance ≠ causation ≠ good forecasts.'},
+ {t:'mc',q:'In simple regression with one X, “Significance F” in the ANOVA table and the slope’s p-value…',o:[['Answer the same question and match (apart from tiny numerical differences)',1],['Test completely different things',0,'With one X they test the same thing: is the slope zero?'],['Are unrelated to t',0,'F = t² here.'],['Should add up to 1',0,'p-values don’t add to 1.']],
+  e:'With one predictor F = t², so both give the same p-value.'},
+ {t:'num',q:'Worked example: slope b = 5.00 and SE(b) = 1.25. What is the t statistic?',a:4,tol:0.01,hint:'t = slope ÷ SE.',e:'t = 5.00 ÷ 1.25 = <b>4.00</b>. With df = 18, p ≈ 0.00084 (try it in the calculator above).'}
+],
+ch8:[
+ {t:'num',q:'Margin of error = t* × SE. With t* = 2.1009 and SE = 0.2399, what is the margin of error (3 decimals)?',a:0.504,tol:0.002,hint:'2.1009 × 0.2399.',e:'2.1009 × 0.2399 ≈ <b>0.504</b>, so the interval is 5.5161 ± 0.504 = [5.012, 6.020].'},
+ {t:'mc',q:'The 95% interval for the slope is [5.01, 6.02] and does not contain 0. This agrees with…',o:[['A two-sided slope test at the 5% level rejecting H₀',1],['A test failing to reject H₀',0,'If 0 is outside the interval, the test rejects H₀.'],['The intercept being zero',0,'That’s a different parameter.'],['R² being 1',0,'No link.']],
+  e:'Interval excludes 0 ⇔ two-sided test at the same level rejects β₁ = 0.'},
+ {t:'mc',q:'Which interval is <b>wider</b> at X = 700?',o:[['The interval for the <i>mean</i> sales of many such weeks',0,'The mean interval is the narrower one.'],['The prediction interval for <i>one</i> future week',1],['They are always identical',0,'They differ because a single week also has its own wiggle.'],['Neither can be computed',0,'Both can be computed.']],
+  e:'Prediction interval = mean interval plus the week-to-week scatter (√(1+h) instead of √h).'},
+ {t:'mc',q:'What does “95% confidence” really mean?',o:[['If we repeated the sampling many times, about 95% of intervals built this way would catch the true slope',1],['There is a 95% chance the true slope lies inside this particular interval',0,'The true slope is fixed. The randomness is in the interval.'],['95% of the weeks lie inside the interval',0,'That’s about individual data, not the slope.'],['The slope is 95% accurate',0,'Confidence level isn’t accuracy.']],
+  e:'The 95% describes the long-run hit rate of the method. The parallel-universes demo shows it.'},
+ {t:'mc',q:'You want a <b>narrower</b> interval for the slope. Which genuinely helps?',o:[['Collect more weeks of data',1],['Ask for 99% confidence instead of 95%',0,'That makes intervals wider.'],['Use fewer weeks',0,'Fewer data means more uncertainty.'],['Round the slope more',0,'Rounding changes how it looks, not the uncertainty.']],
+  e:'More data lowers the standard error, so the margin of error shrinks.'}
+],
+ch9:[
+ {t:'num',q:'The slope’s t statistic is 22.99. Work out t² (nearest whole number). Which table cell should it match?',a:529,tol:1.5,hint:'22.99 × 22.99. Look for the matching value in the ANOVA table.',e:'22.99² ≈ <b>529</b>, which matches F = 528.72 in the ANOVA table. In simple regression F = t².'},
+ {t:'mc',q:'Regression SS = 29,867,630.70 and Residual SS = 1,016,821.85. What should Total SS be?',o:[['30,884,452.55 (the sum of the two)',1],['28,850,808.85 (the difference)',0,'Total SS = Regression SS + Residual SS.'],['528.72',0,'That’s F.'],['0.9671',0,'That’s R², the ratio of the explained part to the total.']],
+  e:'Total variation = explained + leftover, and R² = 29,867,630.70 ÷ 30,884,452.55 = 0.9671.'},
+ {t:'num',q:'With 20 observations, what are the <b>total</b> degrees of freedom?',a:19,tol:0.01,hint:'Total df = n − 1.',e:'Total df = 20 − 1 = <b>19</b>. That splits into 1 (regression) + 18 (residual).'}
+],
+ch10:[
+ {t:'mc',q:'Which sentence is the most defensible in a manager’s report?',o:[['Advertising causes sales to rise by BZD 5.5161 per BZD',0,'“Causes” overreaches for observational data.'],['In these 20 weeks, each extra BZD 100 of weekly advertising was associated with about BZD 552 more weekly sales revenue',1],['Advertising explains 96.7% of why customers buy',0,'R² describes variation in weekly sales in the sample, not customers’ reasons.'],['Spending BZD 1,500 on advertising guarantees BZD 10,580 in sales',0,'That’s extrapolation presented as a guarantee.']],
+  e:'It uses “associated with”, states the sample, and gives a modest, interpolated claim.'},
+ {t:'num',q:'With a 30% gross margin, what is the illustrative net contribution (BZD) from an extra BZD 100 of weekly advertising? (0.30 × 551.61 − 100)',a:65.48,tol:0.1,hint:'0.30 × 551.61 = 165.48. Then subtract the BZD 100 ad cost.',e:'0.30 × 551.61 − 100 = <b>BZD 65.48</b>, before other extra costs. A scenario, not a proven return.'},
+ {t:'num',q:'Break-even: at what gross margin (in %) does an extra BZD 100 of advertising exactly pay for itself using the fitted slope? (nearest 0.1)',a:18.1,tol:0.3,hint:'Need margin × 551.61 = 100.',e:'100 ÷ 551.61 ≈ 18.1%. Equivalent to 1 ÷ 5.5161. Below that margin the extra ads lose money (in this scenario).'},
+ {t:'mc',q:'Holiday weeks tend to have both more advertising <i>and</i> more sales. What does that imply?',o:[['A hidden factor could explain part of the association, so don’t read the slope as pure cause',1],['The slope is exactly right',0,'It may be inflated or distorted by the holiday effect.'],['Regression is useless',0,'It is still useful, with careful wording and follow-up tests.'],['Advertising must have no effect',0,'We can’t conclude that either.']],
+  e:'Omitted variables are why we use cautious language, small trials and, later, multiple regression.'}
+],
+ch11:[
+ {t:'mc',q:'In Ŷ = 3560.29 + 5.4632·Advertising − 51.08·Price, the advertising coefficient means…',o:[['Each extra BZD 1 of advertising goes with about BZD 5.46 more sales, <i>holding price constant</i>',1],['Advertising always adds BZD 5.46 whatever happens to price',0,'The “holding other variables constant” part is the whole point.'],['Advertising explains 5.46% of sales',0,'Coefficients are not percentages of variation.'],['Price has no effect',0,'That’s a separate question about the price coefficient.']],
+  e:'Multiple regression coefficients are read “holding the other predictors constant”.'},
+ {t:'mc',q:'Price’s coefficient has p = 0.214. At α = 0.05 what do we conclude?',o:[['Not enough evidence of a linear link between price and sales once advertising is in the model',1],['Price definitely has zero effect',0,'Failing to reject is not proof of zero effect.'],['Advertising must be wrong',0,'The advertising test is separate.'],['The model is invalid',0,'One non-significant coefficient doesn’t invalidate the model.']],
+  e:'Same logic as before: p ≥ 0.05 means fail to reject, with only 20 weeks.'},
+ {t:'mc',q:'Adding price moved R² from 0.9671 to 0.9700 and adjusted R² from 0.9652 to 0.9665. Best reading?',o:[['A tiny improvement: price adds very little beyond advertising',1],['Price is hugely important',0,'A 0.003 gain in R² is tiny.'],['The model got worse',0,'Both measures rose slightly.'],['R² and adjusted R² should be equal',0,'Adjusted R² is always at most R².']],
+  e:'This is a judgement call you’ll practise next week: does the extra predictor earn its place?'},
+ {t:'mc',q:'Why did the advertising coefficient change a little (5.5161 → 5.4632) when price was added?',o:[['Each coefficient now adjusts for the other predictor, and advertising and price share a little information',1],['A calculation mistake',0,'Coefficients are expected to change when predictors overlap.'],['Because price is bigger than advertising',0,'Size of the numbers isn’t the reason.'],['Because n changed',0,'Same 20 weeks.']],
+  e:'The simple slope answers “ignoring price”. The multiple slope answers “holding price constant”.'}
+],
+ch12:[
+ {t:'num',q:'Fitted line Ŷ = 1500 + 3X (X = advertising in BZD). Predict weekly sales when X = 400.',a:2700,tol:0.5,hint:'1500 + 3 × 400.',e:'1500 + 3 × 400 = <b>2,700</b>.'},
+ {t:'num',q:'r = −0.70. What is R²?',a:0.49,tol:0.005,hint:'R² = r².',e:'(−0.70)² = <b>0.49</b>: the line explains 49% of the variation.'},
+ {t:'mc',q:'Which of these is a residual?',o:[['Actual Y minus predicted Ŷ',1],['Predicted Ŷ minus the mean of Y',0,'That’s the explained part for one dot, not the residual.'],['The slope divided by its SE',0,'That’s the t statistic.'],['The square of r',0,'That’s R².']],e:'Residual = Y − Ŷ.'},
+ {t:'mc',q:'A 95% confidence interval for a slope is (−0.3, 1.2). What can you say?',o:[['It includes 0, so we can’t reject β₁ = 0 at the 5% level',1],['The slope is definitely positive',0,'The interval includes negative values too.'],['The slope is exactly 0.45',0,'We have a range of plausible values, not an exact value.'],['p must be below 0.05',0,'An interval containing 0 goes with p ≥ 0.05.']],e:'Interval contains 0 ⇔ two-sided test does not reject at that level.'},
+ {t:'mc',q:'Predicting at an X value outside the range of observed X is called…',o:[['Extrapolation, and it is less defensible',1],['Interpolation',0,'Interpolation is inside the observed range.'],['Residual analysis',0,'That’s checking the misses.'],['Randomisation',0,'That’s a different idea.']],e:'We have no data there to support the straight-line assumption.'},
+ {t:'mc',q:'Which statistic estimates a <i>typical miss</i> around the line in BZD?',o:[['Residual standard error',1],['R²',0,'R² is a proportion.'],['The p-value',0,'p-values aren’t in BZD.'],['The slope',0,'The slope is BZD of Y per BZD of X.']],e:'s = √(SSE ÷ (n − 2)).'},
+ {t:'mc',q:'Which statement about p-values is correct?',o:[['p assumes the null is true and asks how surprising the data are',1],['p is the probability the null is true',0,'Common myth.'],['A small p proves cause',0,'It doesn’t.'],['p ≥ 0.05 proves no relationship',0,'It only means not enough evidence.']],e:'That is the key to reading every p-value in the output.'},
+ {t:'mc',q:'Your residual plot shows a clear U-shaped curve. What is the sensible next step?',o:[['Don’t trust the straight-line model as it is. Consider a curved model or a transformation',1],['Delete the biggest residuals',0,'Deleting points to improve the picture is poor practice.'],['Increase α',0,'That doesn’t fix a bad model.'],['Ignore it because R² is high',0,'A high R² can coexist with a badly shaped model.']],e:'A curve in residuals breaks the “L” in LINE.'},
+ {t:'mc',q:'Adjusted R² is most useful when…',o:[['Comparing models with different numbers of predictors on the same data',1],['Checking whether the slope is positive',0,'That’s about the sign of the slope.'],['Computing a forecast',0,'It doesn’t help with forecasts directly.'],['Measuring the margin of error',0,'That’s a different calculation.']],e:'It penalises extra predictors that add little.'},
+ {t:'mc',q:'Multiple linear regression is regression with…',o:[['Two or more predictors X used together',1],['Two or more responses Y',0,'That’s multivariate regression, a different topic.'],['Two or more samples of weeks only',0,'It’s about the number of predictors.'],['A curved line only',0,'Multiple regression can still be linear in its coefficients.']],e:'Next week: Ŷ = b₀ + b₁X₁ + b₂X₂ + …'}
+]
+};
+
+
+QZ.ch4.push(
+ {t:'mc',q:'In the “agree or disagree” picture, which weeks <b>push r up</b>?',o:[['Weeks that are above average on both X and Y, or below average on both',1],['Weeks that are above average on X but below average on Y',0,'Those weeks disagree, so they pull r down.'],['Only the weeks nearest the average',0,'Weeks near average count very little.'],['Weeks with the highest sales, whatever X is',0,'r depends on X and Y moving together.']],e:'Same-side weeks agree and raise r. Opposite-side weeks disagree and lower it. Weeks far from average count the most.'},
+ {t:'mc',q:'Which sentence best explains r = +0.9834 between advertising and sales?',o:[['In weeks when advertising was above average, sales were almost always above average too',1],['Advertising causes 98.34% of sales',0,'r is not a percentage, and it does not prove cause.'],['For each BZD 1 of advertising, sales rise BZD 0.98',0,'That would be a slope. r is unit-free.'],['98.34% of weeks were above average',0,'r doesn’t count weeks like that.']],e:'r describes how consistently two columns move together in the same direction.'}
+);
+QZ.ch5.push(
+ {t:'mc',q:'Price has R² = 0.0494. Which sentence is best?',o:[['Price accounts for only about 5% of the week-to-week variation in sales; most is due to other things',1],['Price is 4.94% accurate at predicting sales',0,'R² isn’t an accuracy rate.'],['Price lowers sales by 4.94%',0,'R² is a share of variation, not an effect size.'],['Price is useless in every shop',0,'This is only these 20 weeks, and only price on its own.']],e:'R² is a share of variation: 0.0494 means about 5 out of every 100 bits of up-and-down.'},
+ {t:'mc',q:'Can a model with a high R² still be a poor model?',o:[['Yes. The residuals might show a curve, one odd week might drive the result, or the link might not be causal',1],['No. High R² always means a good model',0,'R² can be high while the model is still flawed.'],['Only if R² is exactly 1',0,'Problems can exist at any R².'],['Only for small data sets',0,'It can happen with any size of data.']],e:'R² is one summary. Always combine it with plots and common sense.'}
+);
+QZ.ch7.push(
+ {t:'mc',q:'A friend gets 6 of 10 coin guesses right, and the chance of 6 or more by pure guessing is about 0.38. What does that say?',o:[['It happens very often by luck, so there is no evidence of special skill',1],['She has a skill because 6 is more than 5',0,'A big p-value means luck easily explains it.'],['There is a 38% chance she has skill',0,'p is not the probability of skill.'],['She was definitely guessing',0,'We just have no evidence against guessing.']],e:'Large p: not surprising under “just guessing”. We can’t claim skill, but we haven’t proven she lacks it either.'},
+ {t:'mc',q:'With a link of r = 0.40, 10 weeks gives p ≈ 0.25 but 100 weeks gives p &lt; 0.0001. Why?',o:[['More weeks make the same pattern much harder to blame on luck. The link itself is not stronger',1],['The link gets stronger with more weeks',0,'r stayed at 0.40. Only the evidence grew.'],['p-values always shrink over time',0,'They change with the data, not with time.'],['A mistake in the calculation',0,'This is how the maths behaves.']],e:'A small p says “hard to blame on luck”, not “big effect”. Read r, R² and the slope for size.'},
+ {t:'mc',q:'Which sentence best explains p = 0.346 for price?',o:[['If price had no effect, a slope this steep would show up by luck in roughly 35 of 100 samples, so we can’t rule luck out',1],['There is a 34.6% chance price affects sales',0,'That’s the p-value myth.'],['Price definitely has no effect',0,'We only fail to find evidence.'],['The slope is 0.346',0,'p is not the slope.']],e:'Large p = not surprising under “nothing is going on”.'}
+);
+
+QZ.ch8.push(
+ {t:'mc',q:'What does the <b>standard error of the slope</b> (0.2399) measure?',o:[['How much the slope typically changes from one sample of weeks to another',1],['The typical miss of the line, in BZD',0,'That is the residual standard error (237.68), a different thing.'],['The share of sales explained by advertising',0,'That is R².'],['The probability the slope is zero',0,'That is not what SE measures.']],e:'It is the “wobble” of the slope between samples. The margin of error is built from it: t* × SE.'},
+ {t:'mc',q:'The 95% interval for the advertising slope is [5.01, 6.02] BZD per BZD. What is the best translation for BZD 100 more advertising?',o:[['Associated with about BZD 501 to BZD 602 more weekly sales',1],['Sales will rise by exactly BZD 551.61',0,'The interval gives a range, and “will” overreaches.'],['Sales will rise by 5% to 6%',0,'The slope is in BZD per BZD, not a percentage.'],['95% of weeks will gain BZD 501 to BZD 602',0,'The interval is about the slope, not individual weeks.']],e:'Multiply both ends of the interval by 100: 501.21 to 602.01.'},
+ {t:'mc',q:'The 95% interval for the <b>price</b> slope is [−654.80, +242.10]. What does it tell you?',o:[['It includes 0, so we cannot rule out no effect. This matches the large p-value (0.35)',1],['Price definitely lowers sales',0,'The interval also includes positive values.'],['Price definitely raises sales',0,'The interval also includes negative values.'],['The interval is too wide to say anything at all',0,'It tells us the data are consistent with a wide range of effects, including none.']],e:'An interval containing 0 goes with p ≥ 0.05. A very wide interval also says the data are too thin to pin the price effect down.'},
+ {t:'mc',q:'Why is a 99% interval <b>wider</b> than a 95% interval from the same data?',o:[['To be more sure of catching the true slope, you have to cast a wider net',1],['A 99% interval uses fewer weeks',0,'The data are the same.'],['Because the slope changes',0,'The slope estimate stays the same. Only the margin changes.'],['It is a calculation error',0,'This is expected.']],e:'Higher confidence means a bigger multiplier t*, so a bigger margin of error.'}
+);
+
+/* ============ QUIZ ENGINE ============ */
+function checkChapter(ch){
+  const qs=QZ[ch];if(!qs)return;
+  if(qs.every((q,i)=>S.ok[ch+'-'+i])){if(!S.done[ch]){S.done[ch]=1;save();}updateProgress();if(ch==='ch12')showFinal();}
+}
+function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function buildQuiz(host){
+  const ch=host.dataset.quiz,qs=QZ[ch];
+  host.innerHTML=`<h3>✅ Learning check${qs.length>1?'s':''}</h3>`;
+  qs.forEach((q,i)=>{
+    const id=ch+'-'+i;
+    const card=document.createElement('div');card.className='qcard';
+    card.innerHTML=`<div class="qh">Question ${i+1} of ${qs.length}</div><div class="qq">${q.q}</div><div class="ans"></div><div class="fb" aria-live="polite"></div>`;
+    host.appendChild(card);
+    const ans=$('.ans',card),fb=$('.fb',card);let tries=0;
+    const solve=(pre)=>{card.classList.add('solved');fb.className='fb show ok';fb.innerHTML='<p>✅ '+(pre||'')+q.e+'</p>';
+      if(!S.ok[id]){S.ok[id]=1;if(tries===0)S.first[id]=1;save();checkChapter(ch);}};
+    if(q.t==='mc'){
+      const wrap=document.createElement('div');wrap.className='opts';
+      shuffled(q.o).forEach(o=>{
+        const b=document.createElement('button');b.type='button';b.className='opt';b.innerHTML=o[0];wrap.appendChild(b);
+        b.addEventListener('click',()=>{
+          if(o[1]){$$('.opt',wrap).forEach(x=>x.disabled=true);b.classList.add('ok');solve('<b>Correct!</b> ');}
+          else{tries++;b.classList.add('bad');b.disabled=true;fb.className='fb show bad';fb.innerHTML='<p>Not quite. '+(o[2]||'Have another look.')+' Try another answer.</p>';}
+        });
+        if(S.ok[id]&&o[1]){b.classList.add('ok');}
+      });
+      ans.appendChild(wrap);
+      if(S.ok[id]){$$('.opt',wrap).forEach(x=>x.disabled=true);solve('');}
+    }else if(q.t==='num'){
+      ans.innerHTML='<div class="numrow"><input type="number" step="any" aria-label="Your answer" inputmode="decimal"><button type="button" class="btn small">Check</button></div>';
+      const inp=$('input',ans),btn=$('button',ans);
+      const go=()=>{
+        const v=parseFloat(inp.value);
+        if(isNaN(v)){fb.className='fb show info';fb.innerHTML='<p>Type a number first.</p>';return;}
+        if(Math.abs(v-q.a)<=q.tol){inp.disabled=true;btn.disabled=true;solve('<b>Correct!</b> ');}
+        else{tries++;fb.className='fb show bad';
+          fb.innerHTML='<p>Not quite. '+(q.hint||'')+'</p>'+(tries>=2?'<p style="margin-top:6px"><button type="button" class="btn small alt" id="sa'+id+'">Show me the answer</button></p>':'');
+          const sa=$('#sa'+id);if(sa)sa.addEventListener('click',()=>{inp.value=q.a;inp.disabled=true;btn.disabled=true;solve('');});}
+      };
+      btn.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+      if(S.ok[id]){inp.value=q.a;inp.disabled=true;btn.disabled=true;solve('');}
+    }else{
+      ans.innerHTML='<textarea aria-label="Your answer"></textarea><div class="row"><button type="button" class="btn small">Show the model answer</button></div>';
+      const ta=$('textarea',ans),btn=$('button',ans);
+      if(S.txt[id])ta.value=S.txt[id];
+      ta.addEventListener('input',()=>{S.txt[id]=ta.value;save();});
+      btn.addEventListener('click',()=>{solve('');});
+      if(S.ok[id])solve('');
+    }
+  });
+}
+$$('.quiz').forEach(buildQuiz);
+function showFinal(){
+  const el=$('#c12Score');let n=0;QZ.ch12.forEach((q,i)=>{if(S.first['ch12-'+i])n++;});
+  el.style.display='block';
+  el.innerHTML=`🎓 <b>Final challenge complete!</b> You got <b>${n} of ${QZ.ch12.length}</b> right on the first try. `+(n>=8?'Excellent. You are ready for multiple regression next week.':n>=5?'Good work. Revisit the chapters for any questions you missed, then you’re ready for next week.':'Nice persistence. Revisit the chapters behind the questions you missed (use the route on the left) and try again whenever you like.');
+}
+updateProgress();
+checkChapter('ch12');
+
+/* ============ HERO ============ */
+const heroDraw=reg(()=>{
+  const el=$('#heroPlot'),x=+$('#heroX').value;$('#heroXo').textContent='BZD '+f0(x);
+  const c=frame(el,{x:[200,1100],y:[3000,9000],xt:[300,500,700,900,1100],yt:[3000,5000,7000,9000],fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',label:'Scatterplot of weekly sales against advertising with fitted line'});
+  const yh=FA.a+FA.b*x;
+  el.innerHTML=c.open+lineSVG(c,200,1100,FA.a+FA.b*200,FA.a+FA.b*1100)+dotsSVG(c,ADV,SALES,-1,5)
+    +`<line class="meanln" x1="${c.sx(x)}" y1="${c.sy(3000)}" x2="${c.sx(x)}" y2="${c.sy(yh)}"/><circle cx="${c.sx(x)}" cy="${c.sy(yh)}" r="8" style="fill:var(--mango);stroke:var(--ink);stroke-width:2"/>`+c.mid+c.close;
+  $('#heroRead').innerHTML=`Spend <b>BZD ${f0(x)}</b> and the line predicts about <b>BZD ${f0(yh)}</b> of sales that week.`;
+});
+$('#heroX').addEventListener('input',heroDraw);
+
+/* ============ CH1 ============ */
+let c1k='adv',c1sel=-1;
+$('#c1Table').innerHTML='<table><thead><tr><th>Week</th><th>Advertising BZD</th><th>Average price BZD</th><th>Sales BZD</th></tr></thead><tbody>'+ADV.map((a,i)=>`<tr id="c1row${i}"><td>${i+1}</td><td class="n">${f0(a)}</td><td class="n">${PRICE[i].toFixed(1)}</td><td class="n">${f0(SALES[i])}</td></tr>`).join('')+'</tbody></table>';
+function c1Info(){
+  const pat=c1k==='adv'?'Pattern: the dots climb ↗, so more advertising goes with more sales.':'Pattern: the dots look scattered, with at most a slight ↘ drift.';
+  $('#c1Read').innerHTML=(c1sel>=0?`<b>Week ${c1sel+1}</b>: advertising BZD ${f0(ADV[c1sel])} · price BZD ${PRICE[c1sel].toFixed(2)} · sales BZD ${f0(SALES[c1sel])}<br>`:'')+pat+(c1sel<0?' Tap or hover a dot to see that week.':'');
+  $$('#c1Table tr').forEach(r=>r.classList.remove('hl'));if(c1sel>=0)$('#c1row'+c1sel).classList.add('hl');
+}
+const c1=reg(()=>{
+  const el=$('#c1Plot'),isA=c1k==='adv',X=isA?ADV:PRICE;
+  const c=frame(el,{x:isA?[200,1100]:[21,27],y:[3000,9000],xt:isA?[300,500,700,900,1100]:[22,23,24,25,26],yt:YT,fx:isA?f0:undefined,fy:f0,xl:isA?'Advertising (BZD)':'Average selling price (BZD)',yl:'Sales (BZD)',label:'Scatterplot of sales against '+(isA?'advertising':'average price')});
+  el.innerHTML=c.open+dotsSVG(c,X,SALES,c1sel,5.5)+c.mid+c.close;
+  bindDots(el,i=>{c1sel=i;c1();});c1Info();
+});
+$('#c1adv').addEventListener('click',e=>{c1k='adv';setPressed([$('#c1adv'),$('#c1price')],e.currentTarget);c1();});
+$('#c1price').addEventListener('click',e=>{c1k='price';setPressed([$('#c1adv'),$('#c1price')],e.currentTarget);c1();});
+
+/* ============ CH2 ============ */
+let c2sel=0;
+$('#c2Week').innerHTML=ADV.map((_,i)=>`<option value="${i}">Week ${i+1}</option>`).join('');
+const c2=reg(()=>{
+  const b=+$('#c2Slope').value,a=+$('#c2Int').value;
+  $('#c2SlopeO').textContent=fN(b,2);$('#c2IntO').textContent=f0(a);
+  const el=$('#c2Plot'),c=frame(el,{x:[200,1100],y:[3000,9000],xt:[300,500,700,900,1100],yt:YT,fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',label:'Scatterplot with your adjustable line'});
+  const yh=ADV.map(x=>a+b*x),res=SALES.map((y,i)=>y-yh[i]),sse=sum(res.map(r=>r*r));
+  let g='';
+  if($('#c2Squares').checked)ADV.forEach((x,i)=>{const s=Math.abs(c.sy(SALES[i])-c.sy(yh[i])),top=Math.min(c.sy(SALES[i]),c.sy(yh[i]));g+=`<rect class="sq" x="${c.sx(x)}" y="${top}" width="${s}" height="${s}"/>`;});
+  if($('#c2Sticks').checked)ADV.forEach((x,i)=>{g+=`<line class="stick" x1="${c.sx(x)}" y1="${c.sy(SALES[i])}" x2="${c.sx(x)}" y2="${c.sy(yh[i])}"/>`;});
+  el.innerHTML=c.open+g+lineSVG(c,200,1100,a+b*200,a+b*1100)+dotsSVG(c,ADV,SALES,c2sel,5.5)+c.mid+c.close;
+  bindDots(el,i=>{c2sel=i;$('#c2Week').value=i;c2();});
+  const score=Math.min(100,FA.sse/sse*100);
+  $('#c2Stats').innerHTML=`<div class="stat"><span>Your total squared miss</span><b>${f0(sse)}</b></div><div class="stat"><span>Best possible (least squares)</span><b>${f0(FA.sse)}</b></div><div class="stat"><span>Closeness score</span><b>${fN(score,1)}%</b></div>`;
+  $('#c2Score').style.width=score+'%';
+  $('#c2Msg').innerHTML=score>=99.5?'🎉 That is (almost exactly) the least squares line. Nobody can do better.':score>=90?'👏 Very close! Nudge the tilt and height a little more.':score>=50?'🙂 Getting there. Try to make the line pass through the middle of the dot cloud.':'🤔 Big misses everywhere. Try making the line follow the direction the dots drift.';
+  const i=c2sel,r=res[i];
+  $('#c2WeekRead').innerHTML=`<b>Week ${i+1}</b>: actual Y = ${f0(SALES[i])}. Predicted Ŷ = ${f0(a)} + ${fN(b,2)} × ${f0(ADV[i])} = ${f0(yh[i])}.<br>Residual = Y − Ŷ = ${f0(SALES[i])} − ${f0(yh[i])} = <b>${r<0?'−':'+'}${f0(Math.abs(r))}</b> → ${r>=0?'the dot is above the line (sales beat the prediction)':'the dot is below the line (sales fell short)'}.`;
+});
+onInput('#c2Slope,#c2Int',c2);$('#c2Sticks').addEventListener('change',c2);$('#c2Squares').addEventListener('change',c2);
+$('#c2Week').addEventListener('change',e=>{c2sel=+e.target.value;c2();});
+$('#c2Best').addEventListener('click',()=>{$('#c2Slope').value=FA.b;$('#c2Int').value=FA.a;c2();});
+$('#c2Mean').addEventListener('click',()=>{$('#c2Slope').value=0;$('#c2Int').value=Math.round(FA.my);c2();});
+$('#c2Reset').addEventListener('click',()=>{$('#c2Slope').value=3;$('#c2Int').value=3000;c2();});
+
+/* ============ CH3 ============ */
+const c3=reg(()=>{
+  const x=+$('#c3X').value;$('#c3XO').textContent='BZD '+f0(x);
+  const el=$('#c3Plot'),c=frame(el,{x:[0,1500],y:[0,11000],xt:[0,300,600,900,1200,1500],yt:[0,2000,4000,6000,8000,10000],fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',label:'Fitted line extended from zero to 1500 advertising'});
+  const P=v=>FA.a+FA.b*v,yh=P(x);
+  let g=`<rect class="zone" x="${c.sx(300)}" y="${c.m.t}" width="${c.sx(1000)-c.sx(300)}" height="${c.ph}"/>`;
+  g+=lineSVG(c,0,1500,P(0),P(1500));
+  g+=ADV.map((v,i)=>`<circle class="dot" cx="${c.sx(v)}" cy="${c.sy(SALES[i])}" r="4.5"/>`).join('');
+  g+=`<line class="meanln" x1="${c.sx(x)}" y1="${c.sy(0)}" x2="${c.sx(x)}" y2="${c.sy(yh)}"/><line class="meanln" x1="${c.sx(0)}" y1="${c.sy(yh)}" x2="${c.sx(x)}" y2="${c.sy(yh)}"/>`;
+  g+=`<circle cx="${c.sx(0)}" cy="${c.sy(P(0))}" r="6" style="fill:var(--mango);stroke:var(--ink);stroke-width:2"/>`;
+  if($('#c3Tri').checked){const xa=x<=1400?x:x-100,xb=xa+100,ya=P(xa),yb=P(xb);
+    g+=`<line style="stroke:var(--mango);stroke-width:4" x1="${c.sx(xa)}" y1="${c.sy(ya)}" x2="${c.sx(xb)}" y2="${c.sy(ya)}"/><line style="stroke:var(--coral);stroke-width:4" x1="${c.sx(xb)}" y1="${c.sy(ya)}" x2="${c.sx(xb)}" y2="${c.sy(yb)}"/>`;}
+  g+=`<circle cx="${c.sx(x)}" cy="${c.sy(yh)}" r="8" style="fill:var(--mango);stroke:var(--ink);stroke-width:2"/>`;
+  let top=`<text class="note" x="${c.sx(650)}" y="${c.m.t+16}" text-anchor="middle">observed range</text><text class="note" x="${c.sx(0)+10}" y="${c.sy(P(0))-12}">a = 2,305.63</text>`;
+  if($('#c3Tri').checked){const xa=x<=1400?x:x-100;top+=`<text class="note" x="${c.sx(xa+50)}" y="${c.sy(P(xa))+16}" text-anchor="middle" style="fill:var(--mango)">+100</text><text class="note" x="${Math.min(c.sx(xa+100)+6,c.W-70)}" y="${c.sy((P(xa)+P(xa+100))/2)+4}" style="fill:var(--coral)">+${f2(FA.b*100)}</text>`;}
+  el.innerHTML=c.open+g+c.mid+top+c.close;
+  const inside=x>=300&&x<=1000;
+  $('#c3Read').innerHTML=`At X = <b>${f0(x)}</b>: Ŷ = 2305.63 + 5.5161 × ${f0(x)} = <b>BZD ${f2(yh)}</b>.<br>`+(inside?'<span class="pill" style="background:var(--ok-soft);color:var(--ok)">✅ Interpolation</span> inside the observed range (300 to 1,000).':'<span class="pill" style="background:var(--coral-soft);color:var(--coral)">⚠️ Extrapolation</span> outside the observed range, so this is much less defensible.')+(x===0?'<br>This is the intercept: the line’s starting height, not a trustworthy “no ads” week.':'');
+});
+onInput('#c3X',c3);$('#c3Tri').addEventListener('change',c3);
+
+/* ============ CH4 ============ */
+const Z1=stdz(normals(40,7));
+let E1=stdz(normals(40,11));
+(function(){const d=sum(Z1.map((z,i)=>z*E1[i]))/39;E1=stdz(E1.map((e,i)=>e-d*Z1[i]));})();
+function strengthWord(r){const a=Math.abs(r);return a>=0.9?'very strong':a>=0.7?'strong':a>=0.4?'moderate':a>=0.2?'weak':'very weak or none';}
+const c4=reg(()=>{
+  const r=+$('#c4R').value;$('#c4RO').textContent=(r>=0?'+':'−')+fN(Math.abs(r),2);
+  const el=$('#c4Plot'),c=frame(el,{x:[-3.4,3.4],y:[-3.8,3.8],h:Math.round(clamp(el.clientWidth*0.55,240,360)),xl:'X',yl:'Y',label:'Synthetic scatterplot with correlation '+r});
+  const ys=Z1.map((z,i)=>r*z+Math.sqrt(1-r*r)*E1[i]);
+  let g=$('#c4Fit').checked?lineSVG(c,-3.4,3.4,-3.4*r,3.4*r):'';
+  g+=Z1.map((z,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(z)}" cy="${c.sy(ys[i])}" r="4.8"/>`).join('');
+  el.innerHTML=c.open+g+c.mid+c.close;
+  const dir=r>0.02?'uphill ↗ (positive)':r<-0.02?'downhill ↘ (negative)':'no clear direction';
+  $('#c4Read').innerHTML=`r = <b>${r>=0?'+':'−'}${fN(Math.abs(r),2)}</b> → <b>${strengthWord(r)}</b>, ${dir}. R² = r² = <b>${fN(r*r,2)}</b>.<br>In plain words: ${r>0.02?'when X is above its average, Y tends to be above its average too':r<-0.02?'when X is above its average, Y tends to be <i>below</i> its average':'knowing X tells you almost nothing about Y'}${Math.abs(r)>=0.7?', and it happens very consistently.':Math.abs(r)>=0.4?', but only fairly consistently.':Math.abs(r)>=0.2?', but with lots of exceptions.':'.'}<br><span style="color:var(--muted);font-size:.92rem">Words like “strong” are only rules of thumb. There are no universal cut-offs.</span>`;
+});
+onInput('#c4R',c4);$('#c4Fit').addEventListener('change',c4);
+
+let pts=[],c4pF=null;
+const seedLine=()=>{pts=[[1,1.4],[2,2.6],[3,2.2],[4,4.1],[5,4.4],[6,6.3],[7,6.0],[8,8.1]];};
+const seedU=()=>{pts=[];for(let x=1;x<=9;x++)pts.push([x,+(0.4+0.38*(x-5)**2).toFixed(2)]);};
+seedLine();
+const c4p=reg(()=>{
+  const el=$('#c4pPlot'),c=frame(el,{x:[0,10],y:[0,10],xt:[0,2,4,6,8,10],yt:[0,2,4,6,8,10],h:Math.round(clamp(el.clientWidth*0.6,260,380)),xl:'X',yl:'Y',label:'Clickable scatterplot'});
+  c4pF=c;let g='';
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);let rtxt='';
+  if(pts.length>=3&&new Set(xs).size>1&&new Set(ys).size>1){
+    const f=fit(xs,ys);g+=lineSVG(c,0,10,f.a,f.a+f.b*10);
+    const rr=Math.abs(f.r)<0.0005?0:f.r;rtxt=`<b>${pts.length} dots</b> · r = <b>${rr>=0?'+':'−'}${fN(Math.abs(rr),3)}</b> · R² = <b>${fN(rr*rr,3)}</b>`;
+    if(Math.abs(f.r)<0.2&&pts.length>=6)rtxt+='<br>r is near 0, but look at the dots: if they bend, there <i>is</i> a pattern, just not a straight one.';
+    else if(pts.length>8&&f.r<0.8&&f.r>0.1)rtxt+='<br>Notice how a single far-away dot can drag r down a lot.';
+  }else rtxt=`${pts.length} dot${pts.length===1?'':'s'}. Add at least 3 (not in a straight vertical or horizontal row) to see r.`;
+  g+=pts.map(p=>`<circle class="dot" style="cursor:crosshair" cx="${c.sx(p[0])}" cy="${c.sy(p[1])}" r="6"/>`).join('');
+  el.innerHTML=c.open+g+c.mid+c.close;$('#c4pRead').innerHTML=rtxt;
+  const svg=$('svg',el);svg.style.cursor='crosshair';
+  svg.addEventListener('click',ev=>{const rc=svg.getBoundingClientRect(),px=(ev.clientX-rc.left)*(c.W/rc.width),py=(ev.clientY-rc.top)*(c.H/rc.height);
+    const [x,y]=c.inv(px,py);if(x<0||x>10||y<0||y>10)return;pts.push([+x.toFixed(2),+y.toFixed(2)]);c4p();});
+});
+$('#c4pLine').addEventListener('click',()=>{seedLine();c4p();});
+$('#c4pU').addEventListener('click',()=>{seedU();c4p();});
+$('#c4pOut').addEventListener('click',()=>{pts.push([9.5,0.6]);c4p();});
+$('#c4pClear').addEventListener('click',()=>{pts=[];c4p();});
+
+function shopMini(id,X,isA){
+  return ()=>{const el=$(id),c=frame(el,{x:isA?[200,1100]:[21,27],y:[3000,9000],xt:isA?[300,600,900]:[22,24,26],yt:[3000,5000,7000,9000],fx:f0,fy:f0,xl:isA?'Advertising (BZD)':'Average price (BZD)',yl:'Sales (BZD)',h:Math.round(clamp(el.clientWidth*0.75,240,330)),label:isA?'Advertising scatterplot':'Price scatterplot'});
+    const F=isA?FA:FP,xa=isA?200:21,xb=isA?1100:27;
+    el.innerHTML=c.open+lineSVG(c,xa,xb,F.a+F.b*xa,F.a+F.b*xb)+X.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(v)}" cy="${c.sy(SALES[i])}" r="4.8"/>`).join('')+c.mid+`<text class="alabel" x="${c.m.l+10}" y="${c.m.t+20}" style="font-size:15px">r = ${sg(F.r,4)}</text>`+c.close;};
+}
+reg(shopMini('#c4aPlot',ADV,true));reg(shopMini('#c4bPlot',PRICE,false));
+
+/* ============ CH5 ============ */
+let c5m='mean';
+const c5=reg(()=>{
+  const el=$('#c5Plot'),c=frame(el,{x:[200,1100],y:[3000,9000],xt:[300,500,700,900,1100],yt:YT,fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',label:'Misses around the average or around the line'});
+  const useMean=c5m==='mean';let g='';
+  ADV.forEach((x,i)=>{const t=useMean?FA.my:FA.yh[i];g+=`<line class="stick" x1="${c.sx(x)}" y1="${c.sy(SALES[i])}" x2="${c.sx(x)}" y2="${c.sy(t)}"/>`;});
+  g+=useMean?lineSVG(c,200,1100,FA.my,FA.my,'meanln'):lineSVG(c,200,1100,FA.a+FA.b*200,FA.a+FA.b*1100);
+  g+=dotsSVG(c,ADV,SALES,-1,5);
+  el.innerHTML=c.open+g+c.mid+c.close;
+  const tot=useMean?FA.sst:FA.sse;
+  $('#c5Stats').innerHTML=`<div class="stat"><span>${useMean?'Squared misses guessing the average':'Squared misses using the line'}</span><b>${f2(tot)}</b></div><div class="stat"><span>Average sales (Manager A’s guess)</span><b>BZD ${f2(FA.my)}</b></div><div class="stat"><span>Share explained (R²)</span><b>${useMean?'0%':fN(FA.r2*100,2)+'%'}</b></div>`;
+  $('#c5BarA').style.width=(useMean?0:FA.r2*100)+'%';$('#c5BarB').style.width=(useMean?100:(1-FA.r2)*100)+'%';
+  $('#c5Read').innerHTML=useMean?`Manager A always predicts BZD ${f0(FA.my)}. The sticks show how far off that is each week. Total squared misses: <b>${f2(FA.sst)}</b> (this is the “total variation”).`:`Manager B’s sticks are much shorter. Total squared misses drop to <b>${f2(FA.sse)}</b>.<br><b>R² = 1 − ${f2(FA.sse)} ÷ ${f2(FA.sst)} = ${f4(FA.r2)}</b>, so the line explains ${fN(FA.r2*100,2)}% of the up-and-down. The leftover ${fN((1-FA.r2)*100,2)}% is the residual share.`;
+});
+$('#c5Mean').addEventListener('click',e=>{c5m='mean';setPressed([$('#c5Mean'),$('#c5Line')],e.currentTarget);c5();});
+$('#c5Line').addEventListener('click',e=>{c5m='line';setPressed([$('#c5Mean'),$('#c5Line')],e.currentTarget);c5();});
+
+const c5r=reg(()=>{
+  const r=+$('#c5rR').value;$('#c5rRO').textContent='r = '+(r>=0?'+':'−')+fN(Math.abs(r),2);
+  const el=$('#c5rPlot'),c=frame(el,{x:[-1,1],y:[0,1],xt:[-1,-0.5,0,0.5,1],yt:[0,0.25,0.5,0.75,1],fx:v=>fN(v,1),fy:v=>fN(v,2),xl:'Correlation r',yl:'R² = r²',h:Math.round(clamp(el.clientWidth*0.5,230,330)),label:'R squared equals r squared'});
+  let path='';for(let i=0;i<=100;i++){const x=-1+i*0.02;path+=(i?'L':'M')+c.sx(x)+' '+c.sy(x*x)+' ';}
+  const mk=(x,col,lab,dx,anchor)=>`<circle cx="${c.sx(x)}" cy="${c.sy(x*x)}" r="6" style="fill:${col};stroke:var(--ink);stroke-width:1.5"/><text class="note" x="${c.sx(x)+dx}" y="${c.sy(x*x)-10}" text-anchor="${anchor||'start'}">${lab}</text>`;
+  el.innerHTML=c.open+`<path class="curve" d="${path}"/>`+c.mid+mk(FA.r,'var(--teal)','Advertising',-8,'end')+mk(FP.r,'var(--coral)','Price',8)+`<circle cx="${c.sx(r)}" cy="${c.sy(r*r)}" r="9" style="fill:var(--mango);stroke:var(--ink);stroke-width:2"/>`+c.close;
+  $('#c5rRead').innerHTML=`r = ${(r>=0?'+':'−')}${fN(Math.abs(r),2)} → R² = r² = <b>${fN(r*r,4)}</b> → the line explains <b>${fN(r*r*100,1)}%</b> of the variation. Notice that r = +0.5 and r = −0.5 give the same R² (0.25): squaring drops the sign.`;
+});
+onInput('#c5rR',c5r);
+
+const c5k=reg(()=>{
+  const k=+$('#c5k').value;$('#c5kO').textContent='k = '+k;
+  const adj=1-(1-FA.r2)*(N-1)/(N-k-1);
+  $('#c5kStats').innerHTML=`<div class="stat"><span>R² (pretend it stays the same)</span><b>${f4(FA.r2)}</b></div><div class="stat"><span>Adjusted R²</span><b>${f4(adj)}</b></div><div class="stat"><span>Penalty</span><b>−${f4(FA.r2-adj)}</b></div>`;
+  $('#c5kRead').innerHTML=k===1?'k = 1 is our real simple model: adjusted R² = 1 − (1 − 0.9671)(19)/(18) = <b>0.9652</b>.':`With ${k} predictors that add nothing, R² doesn’t move but adjusted R² falls to <b>${f4(adj)}</b>. That’s the penalty for keeping product lines that don’t earn their shelf space.`;
+});
+onInput('#c5k',c5k);
+
+/* ============ CH6 ============ */
+const c6=reg(()=>{
+  const el=$('#c6Plot'),c=frame(el,{x:[200,1100],y:[3000,9000],xt:[300,500,700,900,1100],yt:YT,fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',label:'Scatterplot with bands one and two residual standard errors from the line'});
+  const band=(k,cls)=>{const x0=200,x1=1100,u=(x)=>FA.a+FA.b*x+k*FA.s,l=(x)=>FA.a+FA.b*x-k*FA.s;
+    return `<polygon class="${cls}" points="${c.sx(x0)},${c.sy(u(x0))} ${c.sx(x1)},${c.sy(u(x1))} ${c.sx(x1)},${c.sy(l(x1))} ${c.sx(x0)},${c.sy(l(x0))}"/>`;};
+  let g='';if($('#c6b2').checked)g+=band(2,'bandB');if($('#c6b1').checked)g+=band(1,'bandA');
+  g+=lineSVG(c,200,1100,FA.a+FA.b*200,FA.a+FA.b*1100)+dotsSVG(c,ADV,SALES,-1,5);
+  el.innerHTML=c.open+g+c.mid+c.close;
+  const n1=FA.res.filter(r=>Math.abs(r)<=FA.s).length,n2=FA.res.filter(r=>Math.abs(r)<=2*FA.s).length;
+  $('#c6Read').innerHTML=`s = <b>BZD ${f2(FA.s)}</b>. Inside ±1 s: <b>${n1} of 20 weeks</b> (${n1*5}%). Inside ±2 s: <b>${n2} of 20</b> (${n2*5}%).<br><span style="color:var(--muted);font-size:.92rem">Rough rule when errors are roughly bell-shaped: about 68% within ±1 s and about 95% within ±2 s.</span>`;
+});
+$('#c6b1').addEventListener('change',c6);$('#c6b2').addEventListener('change',c6);
+
+const RS={
+  shopFit:{n:'Our shop: vs predicted',d:'<b>Our shop.</b> Residuals fall on both sides of zero with no obvious curve and no broad funnel. That <i>supports</i> a straight line, but with only 20 weeks it can’t prove it. ✅'},
+  shopWeek:{n:'Our shop: by week',d:'<b>Our shop by week.</b> No long runs of the same sign. The signs flip back and forth often. Long runs would hint that weeks are not independent (seasonality, trends). With 20 weeks, don’t over-read it.'},
+  healthy:{n:'Healthy example',d:'<b>Healthy:</b> a random cloud around zero, with similar spread everywhere. This is what we hope to see. ✅'},
+  curve:{n:'Curved ✗',d:'<b>Curved:</b> residuals form a U. The straight line is missing a bend (the L in LINE is broken). Consider a curved model. ❌'},
+  funnel:{n:'Funnel ✗',d:'<b>Funnel:</b> the misses get bigger to the right (the E in LINE is broken). Standard errors and intervals may be unreliable. ❌'}
+};
+function synth(type,seed){const z=normals(40,seed);return z.map((v,i)=>{const u=(i-19.5)/19.5;return type==='healthy'?v*0.9:type==='curve'?2.6*(u*u-0.33)+0.35*v:v*(0.12+1.1*i/39)*1.6;});}
+let c6t='shopFit';
+const c6tabs=$('#c6Tabs');
+Object.keys(RS).forEach(k=>{const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=RS[k].n;b.setAttribute('aria-pressed',k===c6t?'true':'false');b.addEventListener('click',()=>{c6t=k;$$('.chip',c6tabs).forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));c6r();});c6tabs.appendChild(b);});
+const c6r=reg(()=>{
+  const el=$('#c6RPlot');let c,g='';
+  if(c6t==='shopFit'){c=frame(el,{x:[3000,8500],y:[-600,600],xt:[4000,5000,6000,7000,8000],yt:[-400,-200,0,200,400],fx:f0,fy:f0,xl:'Predicted sales (BZD)',yl:'Residual (BZD)',label:'Residuals against predicted sales'});
+    g=`<line class="zero" x1="${c.m.l}" x2="${c.m.l+c.pw}" y1="${c.sy(0)}" y2="${c.sy(0)}"/>`+FA.yh.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(v)}" cy="${c.sy(FA.res[i])}" r="5.5"/>`).join('');}
+  else if(c6t==='shopWeek'){c=frame(el,{x:[0,21],y:[-600,600],xt:[1,5,10,15,20],yt:[-400,-200,0,200,400],fy:f0,xl:'Week',yl:'Residual (BZD)',label:'Residuals in week order'});
+    g=`<line class="zero" x1="${c.m.l}" x2="${c.m.l+c.pw}" y1="${c.sy(0)}" y2="${c.sy(0)}"/><polyline fill="none" style="stroke:var(--muted);stroke-width:1.4" points="${FA.res.map((r,i)=>c.sx(i+1)+','+c.sy(r)).join(' ')}"/>`+FA.res.map((r,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(i+1)}" cy="${c.sy(r)}" r="5.5"/>`).join('');}
+  else{const y=synth(c6t,c6t==='healthy'?21:c6t==='curve'?5:9);c=frame(el,{x:[0,41],y:[-3.6,3.6],xl:'Predicted value (low → high)',yl:'Residual',label:RS[c6t].n+' residual plot'});
+    g=`<line class="zero" x1="${c.m.l}" x2="${c.m.l+c.pw}" y1="${c.sy(0)}" y2="${c.sy(0)}"/>`+y.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(i+1)}" cy="${c.sy(v)}" r="4.8"/>`).join('');}
+  el.innerHTML=c.open+g+c.mid+c.close;$('#c6RRead').innerHTML=RS[c6t].d;
+});
+
+const GT=[['healthy','Healthy random cloud'],['curve','Curved (U-shape)'],['funnel','Funnel']];
+let gType='healthy',gDone=false,gStreak=0;
+const gBtns=$('#c6GBtns');
+GT.forEach(t=>{const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=t[1];b.addEventListener('click',()=>{if(gDone)return;gDone=true;
+  if(t[0]===gType){gStreak++;$('#c6GRead').innerHTML=`✅ Yes, that’s a <b>${t[1].toLowerCase()}</b>. Streak: ${gStreak}.`;}else{gStreak=0;$('#c6GRead').innerHTML=`❌ Not quite. It was a <b>${GT.find(x=>x[0]===gType)[1].toLowerCase()}</b>. Streak reset.`;}
+  nb.style.display='inline-block';});gBtns.appendChild(b);});
+const nb=document.createElement('button');nb.className='btn small alt';nb.type='button';nb.textContent='New mystery plot';nb.style.display='none';gBtns.appendChild(nb);
+let gData=[];
+function newGame(){gType=GT[Math.floor(Math.random()*3)][0];gData=synth(gType,Math.floor(Math.random()*100000));gDone=false;nb.style.display='none';$('#c6GRead').textContent='Pick an answer.';c6g();}
+const c6g=reg(()=>{const el=$('#c6GPlot'),c=frame(el,{x:[0,41],y:[-3.6,3.6],h:Math.round(clamp(el.clientWidth*0.45,210,300)),xl:'Predicted value (low → high)',yl:'Residual',label:'Mystery residual plot'});
+  if(!gData.length)gData=synth(gType,Math.floor(Math.random()*100000));
+  el.innerHTML=c.open+`<line class="zero" x1="${c.m.l}" x2="${c.m.l+c.pw}" y1="${c.sy(0)}" y2="${c.sy(0)}"/>`+gData.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(i+1)}" cy="${c.sy(v)}" r="4.8"/>`).join('')+c.mid+c.close;});
+nb.addEventListener('click',newGame);newGame();
+
+/* ============ CH7: shuffle test ============ */
+const SH={k:'adv',ys:SALES.slice(),slopes:[],ext:0};
+const shF=()=>SH.k==='adv'?FA:FP,shX=()=>SH.k==='adv'?ADV:PRICE;
+function shuffleOnce(){
+  const F=shF(),X=shX(),ys=SALES.slice();
+  for(let i=N-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ys[i],ys[j]]=[ys[j],ys[i]];}
+  let sxy=0;for(let i=0;i<N;i++)sxy+=(X[i]-F.mx)*ys[i];
+  const b=sxy/F.sxx;SH.ys=ys;SH.slopes.push(b);if(Math.abs(b)>=Math.abs(F.b)-1e-12)SH.ext++;return b;
+}
+function shuffleMany(n){for(let i=0;i<n;i++)shuffleOnce();c7();}
+function shReset(){SH.slopes=[];SH.ext=0;shuffleOnce();c7();}
+const c7=reg(()=>{
+  if(!SH.slopes.length)shuffleOnce();
+  const F=shF(),X=shX(),isA=SH.k==='adv';
+  const el1=$('#c7ShPlot'),c=frame(el1,{x:isA?[200,1100]:[21,27],y:[3000,9000],xt:isA?[300,600,900]:[22,24,26],yt:[3000,5000,7000,9000],fx:f0,fy:f0,xl:isA?'Advertising (BZD)':'Average price (BZD)',yl:'Shuffled sales',h:Math.round(clamp(el1.clientWidth*0.75,240,330)),label:'Scatterplot with shuffled sales'});
+  const xa=isA?200:21,xb=isA?1100:27,last=SH.slopes[SH.slopes.length-1],ic=mean(SH.ys)-last*F.mx;
+  el1.innerHTML=c.open+lineSVG(c,xa,xb,F.a+F.b*xa,F.a+F.b*xb,'meanln')+lineSVG(c,xa,xb,ic+last*xa,ic+last*xb)+X.map((v,i)=>`<circle class="dot ghost" style="cursor:default" cx="${c.sx(v)}" cy="${c.sy(SH.ys[i])}" r="4.8"/>`).join('')+c.mid+`<text class="note" x="${c.m.l+8}" y="${c.m.t+16}">dashed = our real line · solid = this shuffle</text>`+c.close;
+  // histogram
+  const sdTheory=Math.sqrt(F.syy/(N-1))/Math.sqrt(F.sxx),Rg=Math.max(Math.abs(F.b)*1.25,4.4*sdTheory),nb=41,w=2*Rg/nb;
+  const bins=new Array(nb).fill(0);SH.slopes.forEach(s=>{let i=Math.floor((s+Rg)/w);i=clamp(i,0,nb-1);bins[i]++;});
+  const mx=Math.max(5,...bins)*1.15;const el2=$('#c7HPlot');
+  const dec=Math.abs(F.b)>=50?0:Math.abs(F.b)>=5?1:2;
+  const tk=[-Rg*0.8,-Rg*0.4,0,Rg*0.4,Rg*0.8].map(v=>+v.toFixed(dec));
+  const h=frame(el2,{x:[-Rg,Rg],y:[0,mx],xt:tk,yt:[],fx:v=>fN(v,dec),xl:'Slope from shuffled data',yl:'Number of shuffles',h:Math.round(clamp(el2.clientWidth*0.75,240,330)),label:'Histogram of shuffled slopes'});
+  let g='';bins.forEach((cnt,i)=>{if(!cnt)return;const x0=-Rg+i*w,mid=x0+w/2,ext=Math.abs(mid)>=Math.abs(F.b);g+=`<rect class="bar-h${ext?' ext':''}" x="${h.sx(x0)}" y="${h.sy(cnt)}" width="${Math.max(1,h.sx(x0+w)-h.sx(x0)-1)}" height="${h.sy(0)-h.sy(cnt)}"/>`;});
+  g+=`<line class="fit" x1="${h.sx(F.b)}" x2="${h.sx(F.b)}" y1="${h.m.t}" y2="${h.m.t+h.ph}"/><line class="fit" style="stroke-dasharray:5 4;opacity:.6" x1="${h.sx(-F.b)}" x2="${h.sx(-F.b)}" y1="${h.m.t}" y2="${h.m.t+h.ph}"/>`;
+  el2.innerHTML=h.open+g+h.mid+`<text class="note" x="${Math.min(h.sx(F.b)-6,h.W-20)}" y="${h.m.t+16}" text-anchor="end" style="fill:var(--coral);font-weight:700">our slope ${fN(F.b,dec===0?1:dec)}</text>`+h.close;
+  const n=SH.slopes.length,tp=pTwo(Math.abs(F.tb),N-2);
+  let msg=`Shuffles so far: <b>${n}</b>. Latest shuffled slope: <b>${fN(last,2)}</b> (ours: <b>${fN(F.b,2)}</b>).<br>Shuffles at least as extreme as ours (|slope| ≥ ${fN(Math.abs(F.b),2)}): <b>${SH.ext}</b>`;
+  if(n>=100){msg+=SH.ext===0?` → shuffle p-value is below 1 in ${n}, so <b>p &lt; ${fN(1/n,n>=1000?3:2)}</b>.`:` → shuffle p-value ≈ ${SH.ext}/${n} = <b>${fN(SH.ext/n,3)}</b>.`;
+    msg+=`<br>The textbook t-test says <b>p = ${pfmt(tp)}</b>. ${isA?'The skeptic’s “just luck” story fails badly: reject H₀.':'Luck alone often beats price’s slope, so we fail to reject H₀. That is not proof price has no effect.'}`;}
+  else msg+='. Try “Shuffle 1,000 times” to see the full picture.';
+  $('#c7Read').innerHTML=msg;
+});
+$('#c7s1').addEventListener('click',()=>{shuffleOnce();c7();});
+$('#c7s100').addEventListener('click',()=>shuffleMany(100));
+$('#c7s1000').addEventListener('click',()=>shuffleMany(1000));
+$('#c7rs').addEventListener('click',shReset);
+$('#c7adv').addEventListener('click',e=>{SH.k='adv';setPressed([$('#c7adv'),$('#c7price')],e.currentTarget);shReset();});
+$('#c7price').addEventListener('click',e=>{SH.k='price';setPressed([$('#c7adv'),$('#c7price')],e.currentTarget);shReset();});
+shReset();
+
+// t curve
+let c7tv=2.1;
+const c7t=reg(()=>{
+  const el=$('#c7tPlot'),c=frame(el,{x:[-6,6],y:[0,0.42],xt:[-6,-4,-2,0,2,4,6],yt:[],h:Math.round(clamp(el.clientWidth*0.5,220,320)),xl:'t value',label:'t distribution with 18 degrees of freedom'});
+  const t=Math.min(6,Math.abs(c7tv));let path='',tl='',tr='';
+  for(let i=0;i<=240;i++){const x=-6+i*0.05;path+=(i?'L':'M')+c.sx(x)+' '+c.sy(tpdf(x,18))+' ';}
+  const poly=(a,b)=>{let p=`${c.sx(a)},${c.sy(0)} `;for(let x=a;x<=b+1e-9;x+=0.05)p+=`${c.sx(x)},${c.sy(tpdf(x,18))} `;return p+`${c.sx(b)},${c.sy(0)}`;};
+  const crit=T95;
+  el.innerHTML=c.open+`<polygon class="tail" points="${poly(t,6)}"/><polygon class="tail" points="${poly(-6,-t)}"/><path class="curve" d="${path}"/>`
+    +[crit,-crit].map(v=>`<line class="zero" x1="${c.sx(v)}" x2="${c.sx(v)}" y1="${c.m.t}" y2="${c.m.t+c.ph}"/>`).join('')+c.mid
+    +`<text class="note" x="${c.sx(crit)+6}" y="${c.m.t+14}">α = 0.05 cut-off: ±${fN(crit,2)}</text>`+c.close;
+  const p=pTwo(Math.abs(c7tv),18);
+  $('#c7tSO').textContent='t = '+fN(c7tv,2);
+  $('#c7tRead').innerHTML=`t = <b>${fN(c7tv,2)}</b> → shaded tails (both sides) add up to <b>p = ${pfmt(p)}</b>. `+(Math.abs(c7tv)>6?'<br>This t is so far out that the shaded tails are too thin to see (the picture only goes to ±6). ':'')+`<br>${p<0.05?'p &lt; 0.05 → <b>reject H₀</b>: evidence of a linear relationship.':'p ≥ 0.05 → <b>fail to reject H₀</b>: not enough evidence (this is not proof of no relationship).'}`;
+  $('#c7tS').value=Math.min(6,Math.abs(c7tv));
+});
+$('#c7tS').addEventListener('input',e=>{c7tv=+e.target.value;c7t();});
+$('#c7tAdv').addEventListener('click',()=>{c7tv=FA.tb;c7t();});
+$('#c7tPrice').addEventListener('click',()=>{c7tv=FP.tb;c7t();});
+function calc7(){
+  const b=parseFloat($('#c7b').value),se=parseFloat($('#c7se').value),df=Math.round(parseFloat($('#c7df').value));
+  if(!(se>0)||!(df>=1)||isNaN(b)){$('#c7Calc').textContent='Enter a slope, a positive SE and df ≥ 1.';return;}
+  const t=b/se,p=pTwo(Math.abs(t),df);
+  $('#c7Calc').innerHTML=`t = ${fN(b,3)} ÷ ${fN(se,3)} = <b>${fN(t,3)}</b> · two-sided p = <b>${pfmt(p)}</b> (df = ${df}) → ${p<0.05?'<b>reject H₀</b> at α = 0.05':'<b>fail to reject H₀</b> at α = 0.05'}.`;
+}
+onInput('#c7b,#c7se,#c7df',calc7);calc7();
+
+/* ============ CH8 ============ */
+let c8lv=0.95;
+const varx=FA.sxx/(N-1);
+const c8=reg(()=>{
+  const n=+$('#c8n').value;$('#c8nO').textContent='n = '+n;
+  const se=FA.s/Math.sqrt((n-1)*varx),t=tcrit(c8lv,n-2),m=t*se,lo=FA.b-m,hi=FA.b+m;
+  const el=$('#c8Line'),c=frame(el,{x:[2.5,8.5],y:[0,1],xt:[3,4,5,6,7,8],yt:[],h:150,m:{b:44},xl:'Slope (BZD of sales per BZD of advertising)',label:'Confidence interval for the slope'});
+  const mr=(a,b,y,cls)=>`<line class="${cls}" x1="${c.sx(a)}" x2="${c.sx(b)}" y1="${c.sy(y)}" y2="${c.sy(y)}"/><line class="${cls}" style="stroke-width:3" x1="${c.sx(a)}" x2="${c.sx(a)}" y1="${c.sy(y)-8}" y2="${c.sy(y)+8}"/><line class="${cls}" style="stroke-width:3" x1="${c.sx(b)}" x2="${c.sx(b)}" y1="${c.sy(y)-8}" y2="${c.sy(y)+8}"/>`;
+  el.innerHTML=c.open+`<line style="stroke:var(--line);stroke-width:8;stroke-linecap:round" x1="${c.sx(FA.b-T95*FA.seb)}" x2="${c.sx(FA.b+T95*FA.seb)}" y1="${c.sy(0.28)}" y2="${c.sy(0.28)}"/>`+mr(lo,hi,0.62,'ci-ok')+`<circle cx="${c.sx(FA.b)}" cy="${c.sy(0.62)}" r="7" style="fill:var(--coral);stroke:var(--ink);stroke-width:1.5"/>`+c.mid
+   +`<text class="note" x="${c.m.l+6}" y="${c.sy(0.28)+4}" style="fill:var(--muted)">grey: original (n = 20, 95%)</text><text class="note" x="${c.sx(FA.b)}" y="${c.sy(0.62)-16}" text-anchor="middle">b = ${fN(FA.b,4)}</text>`+c.close;
+  $('#c8Read').innerHTML=`Level <b>${fN(c8lv*100,0)}%</b>, n = ${n}, df = ${n-2}: t* = <b>${fN(t,4)}</b>, SE = <b>${fN(se,4)}</b>, margin of error = t* × SE = <b>${fN(m,3)}</b>.<br>Interval: ${fN(FA.b,4)} ± ${fN(m,3)} = <b>[${fN(lo,3)}, ${fN(hi,3)}]</b>. ${lo>0?'It stays well away from 0.':'It reaches 0, so we couldn’t rule out a zero slope.'}`;
+});
+$$('[data-lv]').forEach(b=>b.addEventListener('click',()=>{c8lv=+b.dataset.lv;setPressed($$('[data-lv]'),b);c8();covReset();}));
+onInput('#c8n',c8);
+
+const COV={hits:0,total:0,last:[],tc:{}};
+function covSample(){
+  const ys=ADV.map(x=>FA.a+FA.b*x+FA.s*randn()),f=fit(ADV,ys);
+  const key=c8lv;if(!COV.tc[key])COV.tc[key]=tcrit(c8lv,18);const t=COV.tc[key];
+  const lo=f.b-t*f.seb,hi=f.b+t*f.seb;return {b:f.b,lo,hi,hit:lo<=FA.b&&FA.b<=hi};
+}
+function covRun(k,keep){let batch=[];for(let i=0;i<k;i++){const s=covSample();COV.total++;if(s.hit)COV.hits++;batch.push(s);}COV.last=batch.slice(-20);c8c();}
+function covReset(){COV.hits=0;COV.total=0;covRun(20);}
+const c8c=reg(()=>{
+  const el=$('#c8CPlot'),c=frame(el,{x:[4.2,6.9],y:[0,21],xt:[4.5,5,5.5,6,6.5],yt:[],h:Math.round(clamp(el.clientWidth*0.7,260,380)),xl:'Slope estimate and its interval',label:'Twenty simulated confidence intervals'});
+  let g=`<line class="truth" x1="${c.sx(FA.b)}" x2="${c.sx(FA.b)}" y1="${c.m.t}" y2="${c.m.t+c.ph}"/>`;
+  COV.last.forEach((s,i)=>{const y=c.sy(i+1),cls=s.hit?'ci-ok':'ci-miss';g+=`<line class="${cls}" x1="${c.sx(s.lo)}" x2="${c.sx(s.hi)}" y1="${y}" y2="${y}"/><circle cx="${c.sx(s.b)}" cy="${y}" r="3.5" style="fill:${s.hit?'var(--teal)':'var(--coral)'}"/>`;});
+  el.innerHTML=c.open+g+c.mid+`<text class="note" x="${c.sx(FA.b)+6}" y="${c.m.t+14}">true slope (5.516)</text>`+c.close;
+  const k=COV.last.filter(s=>s.hit).length;
+  $('#c8CRead').innerHTML=`This batch: <b>${k} of ${COV.last.length}</b> intervals caught the true slope. Tally so far: <b>${COV.hits} of ${COV.total}</b> = <b>${fN(COV.hits/COV.total*100,1)}%</b> at the ${fN(c8lv*100,0)}% level.`;
+});
+$('#c8c20').addEventListener('click',()=>covRun(20));
+$('#c8c500').addEventListener('click',()=>covRun(500));
+$('#c8cr').addEventListener('click',covReset);
+covReset();
+
+const c8f=reg(()=>{
+  const x0=+$('#c8FX').value;$('#c8FXO').textContent='BZD '+f0(x0);
+  const el=$('#c8FPlot'),c=frame(el,{x:[200,1500],y:[2000,11000],xt:[300,600,900,1200,1500],yt:[2000,4000,6000,8000,10000],fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',label:'Confidence band for the mean and prediction band for one week'});
+  const hh=x=>1/N+(x-FA.mx)**2/FA.sxx,P=x=>FA.a+FA.b*x;
+  const band=(fn)=>{let up='',dn='';for(let x=200;x<=1500;x+=10){const h=fn(x);up+=`${c.sx(x)},${c.sy(P(x)+h)} `;dn=`${c.sx(x)},${c.sy(P(x)-h)} `+dn;}return up+dn;};
+  const mh=x=>T95*FA.s*Math.sqrt(hh(x)),ph=x=>T95*FA.s*Math.sqrt(1+hh(x));
+  const yh=P(x0),mH=mh(x0),pH=ph(x0);
+  el.innerHTML=c.open+`<rect class="zone" x="${c.sx(300)}" y="${c.m.t}" width="${c.sx(1000)-c.sx(300)}" height="${c.ph}"/><polygon class="bandB" points="${band(ph)}"/><polygon class="bandA" points="${band(mh)}"/>`+lineSVG(c,200,1500,P(200),P(1500))+ADV.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(v)}" cy="${c.sy(SALES[i])}" r="4"/>`).join('')
+    +`<line style="stroke:var(--ink);stroke-width:2" x1="${c.sx(x0)}" x2="${c.sx(x0)}" y1="${c.sy(yh-pH)}" y2="${c.sy(yh+pH)}"/><circle cx="${c.sx(x0)}" cy="${c.sy(yh)}" r="7" style="fill:var(--mango);stroke:var(--ink);stroke-width:2"/>`+c.mid
+    +`<text class="note" x="${c.sx(650)}" y="${c.m.t+14}" text-anchor="middle">observed range</text>`+c.close;
+  const out=x0<300||x0>1000;
+  $('#c8FRead').innerHTML=`At X₀ = <b>${f0(x0)}</b>: Ŷ₀ = <b>${f2(yh)}</b>.<br><span style="color:var(--teal-ink)">■</span> 95% interval for the <b>mean</b> sales: [${f2(yh-mH)}, ${f2(yh+mH)}] (± ${f2(mH)})<br><span style="color:var(--mango)">■</span> 95% prediction interval for <b>one week</b>: [${f2(yh-pH)}, ${f2(yh+pH)}] (± ${f2(pH)})`+(out?'<br>⚠️ Outside the observed range: the bands are wider, and they still assume the straight line keeps going.':'');
+});
+onInput('#c8FX',c8f);
+
+/* ============ CH9 ============ */
+const MR=Math.abs(FA.r),SSR=FA.ssr,MSR=SSR,MSE=FA.sse/18,Fv=MSR/MSE,pF=pTwo(Math.sqrt(Fv),18);
+const tc=T95,intLo=FA.a-tc*FA.sea,intHi=FA.a+tc*FA.sea,slLo=FA.b-tc*FA.seb,slHi=FA.b+tc*FA.seb;
+const pInt=pTwo(Math.abs(FA.ta),18),pSl=pTwo(Math.abs(FA.tb),18);
+const INFO={
+ mr:{t:'Multiple R',v:f4(MR),k:'How tightly the dots hug the line, ignoring direction. In simple regression it equals |r|.',f:'|r|',s:'=ABS(CORREL(Model!B2:B21,Model!A2:A21))'},
+ rsq:{t:'R Square',v:f4(FA.r2),k:'The share of the up-and-down in sales that the line explains: 96.71%.',f:'R² = Regression SS ÷ Total SS = r²',s:'=RSQ(Model!B2:B21,Model!A2:A21)'},
+ adj:{t:'Adjusted R Square',v:f4(1-(1-FA.r2)*19/18),k:'R² with a small penalty for the number of predictors. Slightly below R².',f:'1 − (1 − R²)(n − 1)/(n − k − 1)',s:'=1-(1-B5)*(B2-1)/(B2-2)'},
+ se:{t:'Standard Error (residual SE)',v:f2(FA.s),k:'A typical miss around the line, in BZD of sales.',f:'√(Residual SS ÷ residual df)',s:'=INDEX(LINEST(Model!B2:B21,Model!A2:A21,TRUE,TRUE),3,2)'},
+ n:{t:'Observations',v:'20',k:'The number of weeks (dots).',f:'n',s:'=COUNT(Model!B2:B21)'},
+ a_rdf:{t:'Regression df',v:'1',k:'One predictor, so 1.',f:'k',s:'1'},
+ a_rss:{t:'Regression SS',v:f2(SSR),k:'The “explained” squared variation: how much the line removes from Manager A’s total.',f:'Total SS − Residual SS',s:'=INDEX(LINEST(…),5,1)'},
+ a_rms:{t:'Regression MS',v:f2(MSR),k:'Average explained variation per df (SS ÷ df).',f:'Regression SS ÷ 1',s:'=C2/B2'},
+ F:{t:'F',v:f2(Fv),k:'Explained variation divided by leftover variation (each per df). Big F means the line explains much more than leftover noise. In simple regression F = t².',f:'Regression MS ÷ Residual MS',s:'=D2/D3'},
+ sigF:{t:'Significance F',v:sci(pF),k:'The p-value of the overall model test. With one X it matches the slope’s p-value.',f:'P(F ≥ observed | H₀)',s:'=F.DIST.RT(E2,B2,B3)'},
+ a_edf:{t:'Residual df',v:'18',k:'n − 2: we estimated two coefficients.',f:'n − 2',s:'=B2-2'},
+ a_ess:{t:'Residual SS',v:f2(FA.sse),k:'The “leftover” squared variation: the sum of squared residuals. Least squares made this as small as possible.',f:'Σ(Y − Ŷ)²',s:'=INDEX(LINEST(…),5,2)'},
+ a_ems:{t:'Residual MS',v:f2(MSE),k:'Leftover variation per df. Its square root is the residual standard error (237.68).',f:'Residual SS ÷ 18',s:'=C3/B3'},
+ a_tdf:{t:'Total df',v:'19',k:'n − 1.',f:'n − 1',s:'=Summary!B2-1'},
+ a_tss:{t:'Total SS',v:f2(FA.sst),k:'All the up-and-down in sales around the average (Manager A’s total squared misses).',f:'Regression SS + Residual SS',s:'=C2+C3'},
+ c_int_b:{t:'Intercept coefficient',v:f4(FA.a),k:'The line’s height at X = 0 (BZD 2,305.63). It is an extrapolation here.',f:'ȳ − b·x̄',s:'=INTERCEPT(Model!B2:B21,Model!A2:A21)'},
+ c_int_se:{t:'Intercept standard error',v:f4(FA.sea),k:'How much the intercept would wobble between samples.',f:'from LINEST',s:'=INDEX(LINEST(…),2,2)'},
+ c_int_t:{t:'Intercept t Stat',v:f4(FA.ta),k:'Intercept ÷ its SE.',f:'a ÷ SE(a)',s:'=B8/B11'},
+ c_int_p:{t:'Intercept P-value',v:sci(pInt),k:'Tests whether the true intercept is 0. Usually matters less here, because X = 0 is outside the data.',f:'two-sided t test, df = 18',s:'=T.DIST.2T(ABS(B15),B12)'},
+ c_int_lo:{t:'Intercept Lower 95%',v:f4(intLo),k:'Lower end of the 95% confidence interval for the intercept.',f:'a − t*·SE(a)',s:'=B8-B17*B11'},
+ c_int_hi:{t:'Intercept Upper 95%',v:f4(intHi),k:'Upper end of the 95% confidence interval for the intercept.',f:'a + t*·SE(a)',s:'=B8+B17*B11'},
+ c_adv_b:{t:'Advertising coefficient (slope)',v:f4(FA.b),k:'BZD of sales revenue per BZD of advertising. BZD 100 more goes with about BZD 551.61 more.',f:'Sxy ÷ Sxx',s:'=SLOPE(Model!B2:B21,Model!A2:A21)'},
+ c_adv_se:{t:'Slope standard error',v:f4(FA.seb),k:'How much the slope wobbles between samples. Smaller means a more precise slope.',f:'s ÷ √Sxx',s:'=INDEX(LINEST(…),2,1)'},
+ c_adv_t:{t:'Slope t Stat',v:f4(FA.tb),k:'How many standard errors the slope is away from 0. Squared, it equals F.',f:'b ÷ SE(b)',s:'=B9/B10'},
+ c_adv_p:{t:'Slope P-value',v:sci(pSl),k:'If the true slope were 0, the chance of a t this extreme. Tiny, so reject H₀. Report p &lt; 0.001.',f:'two-sided t test, df = 18',s:'=T.DIST.2T(ABS(B13),B12)'},
+ c_adv_lo:{t:'Slope Lower 95%',v:f4(slLo),k:'Lower end of the 95% confidence interval for the slope.',f:'b − t*·SE(b)',s:'=B9-B17*B10'},
+ c_adv_hi:{t:'Slope Upper 95%',v:f4(slHi),k:'Upper end of the 95% confidence interval for the slope.',f:'b + t*·SE(b)',s:'=B9+B17*B10'}
+};
+const td=(k)=>`<td data-k="${k}" tabindex="0" role="button" aria-label="${INFO[k].t}">${INFO[k].v}</td>`;
+$('#c9Xl').innerHTML=`<table><caption>Regression Statistics</caption><tbody>
+<tr><td class="lab-c">Multiple R</td>${td('mr')}</tr><tr><td class="lab-c">R Square</td>${td('rsq')}</tr><tr><td class="lab-c">Adjusted R Square</td>${td('adj')}</tr><tr><td class="lab-c">Standard Error</td>${td('se')}</tr><tr><td class="lab-c">Observations</td>${td('n')}</tr></tbody></table>
+<table style="margin-top:14px"><caption>ANOVA</caption><thead><tr><th class="lab-c"></th><th>df</th><th>SS</th><th>MS</th><th>F</th><th>Significance F</th></tr></thead><tbody>
+<tr><td class="lab-c">Regression</td>${td('a_rdf')}${td('a_rss')}${td('a_rms')}${td('F')}${td('sigF')}</tr>
+<tr><td class="lab-c">Residual</td>${td('a_edf')}${td('a_ess')}${td('a_ems')}<td></td><td></td></tr>
+<tr><td class="lab-c">Total</td>${td('a_tdf')}${td('a_tss')}<td></td><td></td><td></td></tr></tbody></table>
+<table style="margin-top:14px"><caption>Coefficients</caption><thead><tr><th class="lab-c"></th><th>Coefficients</th><th>Standard Error</th><th>t Stat</th><th>P-value</th><th>Lower 95%</th><th>Upper 95%</th></tr></thead><tbody>
+<tr><td class="lab-c">Intercept</td>${td('c_int_b')}${td('c_int_se')}${td('c_int_t')}${td('c_int_p')}${td('c_int_lo')}${td('c_int_hi')}</tr>
+<tr><td class="lab-c">Advertising</td>${td('c_adv_b')}${td('c_adv_se')}${td('c_adv_t')}${td('c_adv_p')}${td('c_adv_lo')}${td('c_adv_hi')}</tr></tbody></table>`;
+const HUNT=[
+ {q:'Find the <b>slope</b>: the BZD of sales per BZD of advertising.',k:'c_adv_b'},
+ {q:'Find the number that says <b>how much of the up-and-down in sales the line explains</b> (R²).',k:'rsq'},
+ {q:'Find the <b>p-value</b> that tests whether advertising really matters (the slope’s p-value).',k:'c_adv_p'},
+ {q:'Find the <b>typical miss in BZD</b> (residual standard error).',k:'se'},
+ {q:'Find the <b>lower end of the 95% interval for the slope</b>.',k:'c_adv_lo'},
+ {q:'Find the value that should equal <b>t²</b> in simple regression.',k:'F'}
+];
+let c9mode='explore',hi9=0;
+function c9Show(k,cell){
+  $$('#c9Xl td').forEach(x=>x.classList.remove('picked','right'));if(cell)cell.classList.add('picked');
+  const o=INFO[k];$('#c9Panel').innerHTML=`<b>${o.t} = ${o.v}</b><br>💡 ${o.k}<br><span style="color:var(--muted)">Formula: ${o.f}<br>In your spreadsheet: </span><code>${o.s}</code>`;
+}
+function huntPrompt(){$('#c9Panel').innerHTML=hi9<HUNT.length?`🔎 <b>Task ${hi9+1} of ${HUNT.length}:</b> ${HUNT[hi9].q}`:'🏆 <b>Treasure hunt complete!</b> You found all six numbers. Now try the learning checks below.';}
+function c9Click(cell){
+  const k=cell.dataset.k;if(!k)return;
+  if(c9mode==='explore'){c9Show(k,cell);return;}
+  if(hi9>=HUNT.length)return;
+  if(k===HUNT[hi9].k){cell.classList.add('right');hi9++;
+    $('#c9Panel').innerHTML=`✅ <b>Yes!</b> That’s ${INFO[k].t} = ${INFO[k].v}.<br>${hi9<HUNT.length?'':'🏆 <b>Treasure hunt complete!</b> '}`+(hi9<HUNT.length?`<br>🔎 <b>Task ${hi9+1} of ${HUNT.length}:</b> ${HUNT[hi9].q}`:'');
+    if(hi9<HUNT.length)setTimeout(()=>$$('#c9Xl td.right').forEach(x=>x.classList.remove('right')),900);
+  }else{cell.classList.add('picked');$('#c9Panel').innerHTML=`❌ Not that one. That cell is <b>${INFO[k].t}</b>. ${INFO[k].k}<br>🔎 <b>Task ${hi9+1}:</b> ${HUNT[hi9].q}`;setTimeout(()=>cell.classList.remove('picked'),1200);}
+}
+$$('#c9Xl td[data-k]').forEach(c=>{c.addEventListener('click',()=>c9Click(c));c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c9Click(c);}});});
+$('#c9Explore').addEventListener('click',e=>{c9mode='explore';setPressed([$('#c9Explore'),$('#c9HuntBtn')],e.currentTarget);$$('#c9Xl td').forEach(x=>x.classList.remove('picked','right'));$('#c9Panel').textContent='Tap a number to see what it means.';});
+$('#c9HuntBtn').addEventListener('click',e=>{c9mode='hunt';hi9=0;setPressed([$('#c9Explore'),$('#c9HuntBtn')],e.currentTarget);$$('#c9Xl td').forEach(x=>x.classList.remove('picked','right'));huntPrompt();});
+
+/* ============ CH10 ============ */
+const c10=reg(()=>{
+  const E=+$('#c10E').value,M=+$('#c10M').value;$('#c10EO').textContent='BZD '+E;$('#c10MO').textContent=M+'%';
+  const rev=FA.b*E,gp=M/100*rev,net=gp-E,be=100/FA.b;
+  $('#c10Stats').innerHTML=`<div class="stat"><span>Associated extra revenue</span><b>BZD ${f2(rev)}</b></div><div class="stat"><span>Gross profit on it (${M}%)</span><b>BZD ${f2(gp)}</b></div><div class="stat"><span>Extra ad cost</span><b>BZD ${f2(E)}</b></div><div class="stat"><span>Net contribution</span><b style="color:${net>=0?'var(--ok)':'var(--coral)'}">${net>=0?'+':'−'}BZD ${f2(Math.abs(net))}</b></div>`;
+  $('#c10Read').innerHTML=`Net = ${M/100} × ${f2(rev)} − ${E} = <b>${sg(net)}</b>. Break-even gross margin ≈ <b>${fN(be,1)}%</b>. ${net>=0?'At this margin the extra advertising would pay for itself in this scenario. Still check capacity, other costs and whether the association is causal.':'At this margin the extra advertising would <b>not</b> pay for itself in this scenario, even if the revenue difference were fully achievable.'}`;
+});
+onInput('#c10E,#c10M',c10);
+const CL=['Business question and the predictor I selected','Direction and relative strength of both relationships (use both r values)','The fitted equation, with units (BZD)','r, R², adjusted R² and the slope’s p-value','The prediction at BZD 700 (and that it is interpolation)','One finding from the residual plots','A practical recommendation (for example a limited trial)','Two limitations (for example other factors, small sample, dependence)','Wording: “is associated with”, not “causes”; 150–200 words'];
+$('#c10List').innerHTML=CL.map((t,i)=>`<label class="chk" style="display:flex;margin:6px 0"><input type="checkbox" data-ci="${i}" ${S.chk[i]?'checked':''}> ${t}</label>`).join('');
+function c10l(){const n=CL.filter((_,i)=>S.chk[i]).length;$('#c10ListRead').textContent=n===CL.length?'🎉 Everything covered. Now check the word count and proofread.':n+' of '+CL.length+' items covered.';}
+$$('#c10List input').forEach(cb=>cb.addEventListener('change',()=>{S.chk[cb.dataset.ci]=cb.checked;save();c10l();}));c10l();
+
+/* ============ CH11 ============ */
+const M2=mlr([ADV,PRICE],SALES);
+const cp=fit(ADV,PRICE),ep=PRICE.map((v,i)=>v-(cp.a+cp.b*ADV[i])),er=FA.res;
+const pSlope=sum(ep.map((v,i)=>v*er[i]))/sum(ep.map(v=>v*v));
+const c11=reg(()=>{
+  const el=$('#c11Plot'),c=frame(el,{x:[-3,3],y:[-600,600],xt:[-3,-2,-1,0,1,2,3],yt:[-400,-200,0,200,400],fx:v=>fN(v,0),fy:f0,xl:'Price, after removing what advertising explains (BZD)',yl:'Sales left over (BZD)',label:'Added variable plot for price'});
+  el.innerHTML=c.open+`<line class="zero" x1="${c.m.l}" x2="${c.m.l+c.pw}" y1="${c.sy(0)}" y2="${c.sy(0)}"/>`+lineSVG(c,-3,3,-3*pSlope,3*pSlope)+ep.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(v)}" cy="${c.sy(er[i])}" r="5"/>`).join('')+c.mid+c.close;
+  $('#c11Read').innerHTML=`The trend line has slope <b>${sg(pSlope,2)}</b>: slightly downhill but with lots of scatter. That number is exactly price’s coefficient in the multiple regression (${sg(M2.b[2],2)}). It means “BZD 1 higher price, <i>holding advertising constant</i>, goes with about BZD ${f2(Math.abs(M2.b[2]))} ${M2.b[2]<0?'lower':'higher'} sales”.`;
+});
+const c11p=reg(()=>{
+  const a=+$('#c11A').value,p=+$('#c11P').value;$('#c11AO').textContent='BZD '+f0(a);$('#c11PO').textContent='BZD '+p.toFixed(1);
+  const m=M2.b[0]+M2.b[1]*a+M2.b[2]*p,s=FA.a+FA.b*a;
+  $('#c11Pred').innerHTML=`<b>Multiple:</b> Ŷ = ${f2(M2.b[0])} + ${fN(M2.b[1],4)} × ${f0(a)} ${M2.b[2]<0?'−':'+'} ${fN(Math.abs(M2.b[2]),2)} × ${p.toFixed(1)} = <b>BZD ${f2(m)}</b><br><b>Simple (advertising only):</b> BZD ${f2(s)}<br>Difference: BZD ${f2(Math.abs(m-s))}. Moving the price slider barely changes the answer, which fits price’s weak role.`;
+});
+onInput('#c11A,#c11P',c11p);
+$('#c11Tbl').innerHTML=`<table><thead><tr><th></th><th>Simple (advertising only)</th><th>Multiple (advertising + price)</th></tr></thead><tbody>
+<tr><td>R²</td><td class="n">${f4(FA.r2)}</td><td class="n">${f4(M2.r2)}</td></tr>
+<tr><td>Adjusted R²</td><td class="n">${f4(1-(1-FA.r2)*19/18)}</td><td class="n">${f4(M2.adj)}</td></tr>
+<tr><td>Residual standard error (BZD)</td><td class="n">${f2(FA.s)}</td><td class="n">${f2(M2.s)}</td></tr>
+<tr><td>Advertising coefficient (p-value)</td><td class="n">${f4(FA.b)} (${sci(pSl)})</td><td class="n">${f4(M2.b[1])} (${sci(M2.p[1])})</td></tr>
+<tr class="hl"><td>Price coefficient (p-value)</td><td class="n">not in model</td><td class="n">${sg(M2.b[2],2)} (p = ${fN(M2.p[2],3)})</td></tr>
+<tr><td>Intercept</td><td class="n">${f2(FA.a)}</td><td class="n">${f2(M2.b[0])}</td></tr></tbody></table>`;
+
+/* ============ REFLECTION + INIT ============ */
+$$('[data-save]').forEach(t=>{const k=t.dataset.save;if(S.txt[k])t.value=S.txt[k];t.addEventListener('input',()=>{S.txt[k]=t.value;save();});});
+
+/* ============ NEW: CH4 agree / disagree ============ */
+let c4qk='adv',c4qsel=-1;
+const c4q=reg(()=>{
+  const el=$('#c4qPlot'),isA=c4qk==='adv',X=isA?ADV:PRICE,F=isA?FA:FP,mx=F.mx,my=F.my;
+  const c=frame(el,{x:isA?[200,1100]:[21,27],y:[3000,9000],xt:isA?[300,500,700,900,1100]:[22,23,24,25,26],yt:YT,fx:isA?f0:undefined,fy:f0,xl:isA?'Advertising (BZD)':'Average price (BZD)',yl:'Sales (BZD)',label:'Scatterplot split into above-average and below-average regions'});
+  const q=(xa,xb,ya,yb,cls)=>`<rect class="${cls}" x="${c.sx(xa)}" y="${c.sy(yb)}" width="${c.sx(xb)-c.sx(xa)}" height="${c.sy(ya)-c.sy(yb)}"/>`;
+  const xl=c.x0,xr=c.x1;
+  let g=q(mx,xr,my,9000,'zone')+q(xl,mx,3000,my,'zone')+q(xl,mx,my,9000,'quadbad')+q(mx,xr,3000,my,'quadbad');
+  g+=`<line class="meanln" x1="${c.sx(mx)}" x2="${c.sx(mx)}" y1="${c.m.t}" y2="${c.m.t+c.ph}"/><line class="meanln" x1="${c.m.l}" x2="${c.m.l+c.pw}" y1="${c.sy(my)}" y2="${c.sy(my)}"/>`;
+  g+=dotsSVG(c,X,SALES,c4qsel,5.5);
+  const lab=(x,y,t,a)=>`<text class="note" x="${x}" y="${y}" text-anchor="${a}" style="font-weight:700">${t}</text>`;
+  el.innerHTML=c.open+g+c.mid+lab(c.m.l+c.pw-8,c.m.t+16,'agree ✓','end')+lab(c.m.l+8,c.m.t+c.ph-8,'agree ✓','start')+lab(c.m.l+8,c.m.t+16,'disagree ✗','start')+lab(c.m.l+c.pw-8,c.m.t+c.ph-8,'disagree ✗','end')+c.close;
+  bindDots(el,i=>{c4qsel=i;c4q();});
+  const agree=X.filter((x,i)=>(x-mx)*(SALES[i]-my)>0).length;
+  let t=`<b>${agree} of 20 weeks agree</b> (same side of average for both) and ${20-agree} disagree. r = <b>${sg(F.r,4)}</b>.`;
+  if(c4qsel>=0){const i=c4qsel,dx=X[i]-mx,dy=SALES[i]-my,nm=isA?'advertising':'price',fx=isA?f0:v=>v.toFixed(2);
+    t+=`<br><b>Week ${i+1}:</b> ${nm} ${fx(X[i])} is ${dx>=0?'above':'below'} its average (${isA?f0(mx):mx.toFixed(2)}); sales ${f0(SALES[i])} are ${dy>=0?'above':'below'} their average (${f0(my)}) → <b>${dx*dy>0?'agree ✓':'disagree ✗'}</b>.`;}
+  $('#c4qRead').innerHTML=t;
+});
+$('#c4qadv').addEventListener('click',e=>{c4qk='adv';c4qsel=-1;setPressed([$('#c4qadv'),$('#c4qprice')],e.currentTarget);c4q();});
+$('#c4qprice').addEventListener('click',e=>{c4qk='price';c4qsel=-1;setPressed([$('#c4qadv'),$('#c4qprice')],e.currentTarget);c4q();});
+
+/* ============ NEW: CH5 100 squares ============ */
+let c5sv=FA.r2,c5sk='adv';
+const c5s=reg(()=>{
+  const r2=c5sv,n=Math.round(r2*100);
+  $('#c5sRO').textContent='R² = '+fN(r2,2);
+  $('#c5Grid').innerHTML=Array.from({length:100},(_,i)=>`<span class="sqr ${i<n?'ex':'lo'}"></span>`).join('');
+  const nm=c5sk==='adv'?'advertising':c5sk==='price'?'price':'the predictor';
+  $('#c5sRead').innerHTML=`R² = <b>${f4(r2)}</b> → about <b>${n} of 100</b> squares are teal. In words: about <b>${fN(r2*100,1)}%</b> of the week-to-week ups and downs in sales are accounted for by ${nm}. The other <b>${fN((1-r2)*100,1)}%</b> is down to other things (holidays, weather, stock, luck…).`;
+});
+$('#c5sAdv').addEventListener('click',e=>{c5sk='adv';c5sv=FA.r2;$('#c5sR').value=FA.r2;setPressed([$('#c5sAdv'),$('#c5sPrice')],e.currentTarget);c5s();});
+$('#c5sPrice').addEventListener('click',e=>{c5sk='price';c5sv=FP.r2;$('#c5sR').value=FP.r2;setPressed([$('#c5sAdv'),$('#c5sPrice')],e.currentTarget);c5s();});
+$('#c5sR').addEventListener('input',e=>{c5sk='custom';c5sv=+e.target.value;setPressed([$('#c5sAdv'),$('#c5sPrice')],null);c5s();});
+
+/* ============ NEW: CH7 guessing game ============ */
+function binomTail(k,n){let s=0;for(let j=k;j<=n;j++){let c=1;for(let i=1;i<=j;i++)c=c*(n-i+1)/i;s+=c;}return s/Math.pow(2,n);}
+const CG={sim:new Array(11).fill(0)};
+function cgGen(){const a=new Array(11).fill(0);for(let i=0;i<1000;i++){let h=0;for(let j=0;j<10;j++)if(Math.random()<0.5)h++;a[h]++;}CG.sim=a;}
+cgGen();
+const c7g=reg(()=>{
+  const k=+$('#c7gK').value;$('#c7gKO').textContent=k+' of 10';
+  const el=$('#c7gPlot'),mxv=Math.max(...CG.sim)*1.15;
+  const c=frame(el,{x:[-0.7,10.7],y:[0,mxv],xt:[0,1,2,3,4,5,6,7,8,9,10],yt:[],h:Math.round(clamp(el.clientWidth*0.5,220,320)),xl:'Flips guessed right (out of 10)',yl:'Pretend guessers',label:'How many of 1000 pretend guessers got each score'});
+  let g='',tx='';
+  CG.sim.forEach((cnt,j)=>{const ext=j>=k;g+=`<rect class="bar-h${ext?' ext':''}" x="${c.sx(j-0.4)}" y="${c.sy(cnt)}" width="${c.sx(j+0.4)-c.sx(j-0.4)}" height="${c.sy(0)-c.sy(cnt)}"/>`;
+    if(cnt>0&&c.W>480)tx+=`<text class="note" x="${c.sx(j)}" y="${c.sy(cnt)-4}" text-anchor="middle" style="font-size:11px">${cnt}</text>`;});
+  el.innerHTML=c.open+g+c.mid+tx+c.close;
+  const p=binomTail(k,10),simN=sum(CG.sim.slice(k));
+  const verdict=p<0.001?'🤯 Extremely surprising if she was only guessing.':p<0.05?'😮 Pretty surprising. Maybe she is not just guessing.':p<0.2?'🤔 A little unusual, but luck could easily do this.':'🙂 Not surprising at all. This happens all the time by luck, so there is no evidence of special skill.';
+  $('#c7gRead').innerHTML=`<b>${k} or more right</b> happened for <b>${simN} of 1,000</b> pretend guessers (${fN(simN/10,1)}%). The exact chance when just guessing is <b>p = ${fN(p,4)}</b>, about 1 in ${f0(1/p)}.<br>${verdict}`;
+});
+$('#c7gK').addEventListener('input',c7g);
+$('#c7gRun').addEventListener('click',()=>{cgGen();c7g();});
+
+/* ============ NEW: CH7 surprise meter ============ */
+const MP=[['0.50',0.5],['0.20',0.2],['0.05',0.05],['0.01',0.01],['0.001',0.001],['Our advertising p',pTwo(Math.abs(FA.tb),18)],['Our price p',pTwo(Math.abs(FP.tb),18)]];
+const mChips=$('#c7mChips');
+function c7m(p,lab){
+  const n=1/p,per=p*100;
+  const words=p>=0.2?'Not surprising at all. Luck explains this easily.':p>=0.05?'A bit unusual, but not enough to be convinced. Fail to reject H₀.':p>=0.01?'Surprising. Reject H₀ at the 5% level.':p>=0.001?'Very surprising. Strong evidence against “nothing is going on”.':'Extremely surprising. “Nothing is going on” is very hard to believe.';
+  $('#c7mMark').style.left=(clamp(-Math.log10(p)/6,0,1)*100)+'%';
+  $('#c7mRead').innerHTML=`<b>${lab} = ${pfmt(p)}</b>. If nothing were going on, a result this extreme would turn up in about <b>${per>=1?fN(per,per>=10?0:1)+' out of every 100':'1 out of every '+(n>=1e9?sci(n):f0(n))}</b> samples.<br>${words}`;
+}
+MP.forEach((m,i)=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=m[0];b.setAttribute('aria-pressed',i===2?'true':'false');
+  b.addEventListener('click',()=>{$$('.chip',mChips).forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));c7m(m[1],m[0].startsWith('Our')?m[0]:'p');});mChips.appendChild(b);});
+c7m(0.05,'p');
+
+/* ============ NEW: CH7 what makes p small ============ */
+const c7r=reg(()=>{
+  const r=+$('#c7rR').value,n=+$('#c7rN').value;$('#c7rRO').textContent=r.toFixed(2);$('#c7rNO').textContent='n = '+n;
+  const calc=nn=>{const t=r*Math.sqrt(nn-2)/Math.sqrt(1-r*r);return {t,p:pTwo(t,nn-2)};};
+  const cur=calc(n);
+  $('#c7rRead').innerHTML=`|r| = <b>${r.toFixed(2)}</b> (R² = ${fN(r*r,2)}), n = <b>${n}</b> weeks → t = <b>${fN(cur.t,2)}</b>, p = <b>${pfmt(cur.p)}</b>. ${cur.p<0.05?'<b>Reject H₀</b> at 5%: hard to blame on luck.':'<b>Fail to reject H₀</b> at 5%: luck could explain it.'}`;
+  $('#c7rTbl').innerHTML='<table><thead><tr><th>Weeks (n)</th><th>t</th><th>p-value</th><th>At 5%</th></tr></thead><tbody>'+[5,10,20,40,100].map(nn=>{const x=calc(nn);return `<tr${nn===n?' class="hl"':''}><td>${nn}</td><td class="n">${fN(x.t,2)}</td><td class="n">${pfmt(x.p)}</td><td>${x.p<0.05?'Reject H₀':'Fail to reject'}</td></tr>`;}).join('')+`</tbody></table>`;
+});
+onInput('#c7rR,#c7rN',c7r);
+
+/* ============ NEW: CH7 putting it together ============ */
+(function(){
+  const row=(nm,F,verdict)=>{const p=pTwo(Math.abs(F.tb),18);return `<tr><td><b>${nm}</b></td><td>${sg(F.r,4)}<br><span style="color:var(--muted)">${Math.abs(F.r)>=0.7?'strong':'weak'}, ${F.r>0?'upward':'downward'}</span></td><td>${f4(F.r2)}<br><span style="color:var(--muted)">${fN(F.r2*100,1)}% of the up-and-down</span></td><td>${pfmt(p)}<br><span style="color:var(--muted)">${p<0.05?'not plausibly luck':'luck can’t be ruled out'}</span></td><td>${verdict}</td></tr>`;};
+  $('#c7Sum').innerHTML='<table><thead><tr><th>Clue</th><th>r: how tight?</th><th>R²: how much explained?</th><th>p: could it be luck?</th><th>Plain-English verdict</th></tr></thead><tbody>'
+   +row('Advertising',FA,'A strong, real-looking link. Useful for predicting sales. Still say “associated with”.')
+   +row('Average price',FP,'A weak link that luck could easily explain. Not a useful predictor on its own.')+'</tbody></table>';
+})();
+
+/* ============ NEW: CH8 wobble ============ */
+const WB={slopes:[],ys:null,b:null};
+function wbOne(){const ys=ADV.map(x=>FA.a+FA.b*x+FA.s*randn()),f=fit(ADV,ys);WB.slopes.push(f.b);WB.ys=ys;WB.f=f;}
+function wbMany(k){for(let i=0;i<k;i++)wbOne();c8w();}
+function wbReset(){WB.slopes=[];wbOne();c8w();}
+const c8w=reg(()=>{
+  if(!WB.slopes.length)wbOne();
+  const f=WB.f,el=$('#c8wPlot'),c=frame(el,{x:[200,1100],y:[2000,10000],xt:[300,600,900],yt:[2000,4000,6000,8000,10000],fx:f0,fy:f0,xl:'Advertising (BZD)',yl:'Sales (BZD)',h:Math.round(clamp(el.clientWidth*0.75,240,330)),label:'Latest simulated sample with its fitted line'});
+  el.innerHTML=c.open+lineSVG(c,200,1100,FA.a+FA.b*200,FA.a+FA.b*1100,'meanln')+lineSVG(c,200,1100,f.a+f.b*200,f.a+f.b*1100)+ADV.map((v,i)=>`<circle class="dot" style="cursor:default" cx="${c.sx(v)}" cy="${c.sy(WB.ys[i])}" r="4.8"/>`).join('')+c.mid+`<text class="note" x="${c.m.l+8}" y="${c.m.t+16}">dashed = true line (5.516) · solid = this sample</text>`+c.close;
+  const lo=FA.b-1.4,hi=FA.b+1.4,nb=28,w=(hi-lo)/nb,bins=new Array(nb).fill(0);
+  WB.slopes.forEach(s=>{const i=Math.floor((s-lo)/w);if(i>=0&&i<nb)bins[i]++;});
+  const el2=$('#c8wHist'),h=frame(el2,{x:[lo,hi],y:[0,Math.max(5,...bins)*1.2],xt:[4.5,5,5.5,6,6.5],yt:[],fx:v=>fN(v,1),xl:'Slope from each sample',yl:'Number of samples',h:Math.round(clamp(el2.clientWidth*0.75,240,330)),label:'Histogram of slopes from simulated samples'});
+  let g='';bins.forEach((cnt,i)=>{if(cnt)g+=`<rect class="bar-h" x="${h.sx(lo+i*w)}" y="${h.sy(cnt)}" width="${Math.max(1,h.sx(lo+(i+1)*w)-h.sx(lo+i*w)-1)}" height="${h.sy(0)-h.sy(cnt)}"/>`;});
+  el2.innerHTML=h.open+g+`<line class="truth" x1="${h.sx(FA.b)}" x2="${h.sx(FA.b)}" y1="${h.m.t}" y2="${h.m.t+h.ph}"/>`+h.mid+h.close;
+  const n=WB.slopes.length,m=mean(WB.slopes),sd=Math.sqrt(sum(WB.slopes.map(v=>(v-m)**2))/Math.max(1,n-1));
+  $('#c8wRead').innerHTML=`Sample ${n}: slope = <b>${fN(f.b,3)}</b> (true slope 5.516). `+(n>=10?`After ${n} samples the slopes have a spread (standard deviation) of <b>${fN(sd,3)}</b>. The theory says the standard error is <b>${fN(FA.seb,4)}</b>. Close, because the standard error <i>is</i> the typical wobble of the slope.`:'Take at least 10 samples to see the wobble add up.');
+});
+$('#c8w1').addEventListener('click',()=>{wbOne();c8w();});
+$('#c8w100').addEventListener('click',()=>wbMany(100));
+$('#c8wr').addEventListener('click',wbReset);
+
+/* ============ NEW: CH8 interval vs zero ============ */
+let c8zk='adv';
+const c8z=reg(()=>{
+  const F=c8zk==='adv'?FA:FP,isA=c8zk==='adv',lo=F.b-T95*F.seb,hi=F.b+T95*F.seb,p=pTwo(Math.abs(F.tb),18);
+  const pad=(Math.max(hi,0)-Math.min(lo,0))*0.2,a=Math.min(lo,0)-pad,z=Math.max(hi,0)+pad,dec=isA?1:0;
+  const el=$('#c8zPlot'),c=frame(el,{x:[a,z],y:[0,1],xt:[],yt:[],h:150,m:{b:44},xl:isA?'Slope: BZD of sales per BZD of advertising':'Slope: BZD of sales per BZD of price',label:'Confidence interval for the slope compared with zero'});
+  const cls=(lo<=0&&hi>=0)?'ci-miss':'ci-ok';
+  const ticks=[a+pad*0.2,lo,0,F.b,hi,z-pad*0.2].filter((v,i,arr)=>true);
+  el.innerHTML=c.open+`<line class="zero" x1="${c.sx(0)}" x2="${c.sx(0)}" y1="${c.m.t}" y2="${c.m.t+c.ph}"/><line class="${cls}" x1="${c.sx(lo)}" x2="${c.sx(hi)}" y1="${c.sy(0.55)}" y2="${c.sy(0.55)}"/><line class="${cls}" style="stroke-width:3" x1="${c.sx(lo)}" x2="${c.sx(lo)}" y1="${c.sy(0.55)-9}" y2="${c.sy(0.55)+9}"/><line class="${cls}" style="stroke-width:3" x1="${c.sx(hi)}" x2="${c.sx(hi)}" y1="${c.sy(0.55)-9}" y2="${c.sy(0.55)+9}"/><circle cx="${c.sx(F.b)}" cy="${c.sy(0.55)}" r="7" style="fill:var(--coral);stroke:var(--ink);stroke-width:1.5"/>`+c.mid
+   +`<text class="note" x="${c.sx(0)+6}" y="${c.m.t+14}">0 = no effect</text><text class="note" x="${c.sx(lo)}" y="${c.sy(0.55)+28}" text-anchor="middle">${fN(lo,dec===1?2:1)}</text><text class="note" x="${c.sx(hi)}" y="${c.sy(0.55)+28}" text-anchor="middle">${fN(hi,dec===1?2:1)}</text><text class="note" x="${c.sx(F.b)}" y="${c.sy(0.55)-16}" text-anchor="middle">b = ${fN(F.b,dec===1?3:2)}</text>`+c.close;
+  const inc=lo<=0&&hi>=0;
+  $('#c8zRead').innerHTML=`95% interval: <b>[${fN(lo,2)}, ${fN(hi,2)}]</b>. It <b>${inc?'includes':'does not include'} 0</b> → we ${inc?'<b>cannot rule out</b> no effect':'<b>can rule out</b> no effect at the 5% level'}. This matches the p-value for this slope: <b>p = ${pfmt(p)}</b>.`+(isA?'':'<br>Notice how wide the interval is: with only 20 weeks, the data are consistent with a price effect anywhere from strongly negative to mildly positive.');
+});
+$('#c8zadv').addEventListener('click',e=>{c8zk='adv';setPressed([$('#c8zadv'),$('#c8zprice')],e.currentTarget);c8z();});
+$('#c8zprice').addEventListener('click',e=>{c8zk='price';setPressed([$('#c8zadv'),$('#c8zprice')],e.currentTarget);c8z();});
+})();
+</script>
+</body>
+</html>
